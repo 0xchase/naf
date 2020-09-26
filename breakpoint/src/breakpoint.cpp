@@ -1,6 +1,7 @@
 #include <inttypes.h>
 #include "binaryninjaapi.h"
 #include "lowlevelilinstruction.h"
+#include "mediumlevelilinstruction.h"
 #include "binaryninjacore.h"
 #include <inttypes.h>
 
@@ -11,34 +12,33 @@ void print_llil(BinaryNinja::BinaryView *view);
 
 void write_breakpoint(BinaryNinja::BinaryView *view, uint64_t start, uint64_t length)
 {
-  if (view->GetRecentAnalysisFunctionForAddress(start))
-    printf("FOUND\n");
-
-  if (view->GetAnalysisFunctionsForAddress(view->GetCurrentOffset()).size() > 0)
-    printf("Found function\n");
-  else
-    printf("Didn't find functions\n");
+  printf("The current offset is 0x%x\n", view->GetCurrentOffset());
     
-  for (auto& func : view->GetAnalysisFunctionsForAddress(start)) {
-    printf("Running loop\n");
+  for (auto& func : view->GetAnalysisFunctionList()) {
 
     Ref<Symbol> sym = func->GetSymbol();
+
+    if (sym->GetFullName() != "_start") {
+      continue;
+    } else {
+      printf("Found _start\n");
+    }
 
     if (sym)
       printf("Function %s:\n", sym->GetFullName().c_str());
     else
       printf("Function at 0x%x:\n", func->GetStart());
 
-    Ref<LowLevelILFunction> il = func->GetLowLevelIL();
+    Ref<MediumLevelILFunction> il = func->GetMediumLevelIL();
 
     if (!il) {
-			printf("    Does not have LLIL\n\n");
+			printf("    Does not have MLIL\n\n");
 			continue;
 		}
 
 		for (auto& block : il->GetBasicBlocks()) {
 			for (size_t instrIndex = block->GetStart(); instrIndex < block->GetEnd(); instrIndex++) {
-				LowLevelILInstruction instr = (*il)[instrIndex];
+				MediumLevelILInstruction instr = (*il)[instrIndex];
 
 				vector<InstructionTextToken> tokens;
 				il->GetInstructionText(func, func->GetArchitecture(), instrIndex, tokens);
@@ -58,6 +58,7 @@ void write_breakpoint(BinaryNinja::BinaryView *view, uint64_t start, uint64_t le
 void print_llil(BinaryNinja::BinaryView *view) {
   for (auto& func : view->GetAnalysisFunctionList()) {
     Ref<Symbol> sym = func->GetSymbol();
+
     if (sym)
       printf("Function %s:\n", sym->GetFullName().c_str());
     else
@@ -85,12 +86,12 @@ void print_llil(BinaryNinja::BinaryView *view) {
 				il->GetInstructionText(func, func->GetArchitecture(), instrIndex, tokens);
 				printf("    %" PRIdPTR " @ 0x%" PRIx64 "  ", instrIndex, instr.address);
 				for (auto& token: tokens)
+          token.operand ==
 					printf("%s", token.text.c_str());
 				printf("\n");
 
-        
-        // print il expressions
 
+        
       }
     }
   }
