@@ -13,6 +13,8 @@ fn main() {
 
     // Tell cargo to invalidate the built crate whenever the wrapper changes
     println!("cargo:rerun-if-changed=wrapper.h");
+    println!("cargo:rerun-if-changed=./c-src/interface.c");
+    println!("cargo:rerun-if-changed=./c-src/interface.h");
 
     let bindings = bindgen::Builder::default()
         .header("wrapper.h")

@@ -5,3 +5,9 @@ pub fn test_me() {
     let r = unsafe {square(5)};
     println!("Running Rust main: {}", r);
 }
+
+#[no_mangle]
+extern "C" fn trigger1() {
+    // stuff
+    println!("Triggering some plugin action");
+}
