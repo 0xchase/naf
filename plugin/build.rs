@@ -6,14 +6,14 @@ use std::path::PathBuf;
 fn main() {
     // Tell cargo to tell rustc to link the system bzip2
     // shared library.
-    cc::Build::new().cpp(false).file("./c-src/interface.c").compile("libinterface.a");
+    cc::Build::new().cpp(true).file("./c-src/interface.cpp").compile("libinterface.a");
 
     println!("cargo:rustc-link-search=native=./c-src");
     println!("cargo:rustc-link-lib=static=interface");
 
     // Tell cargo to invalidate the built crate whenever the wrapper changes
     println!("cargo:rerun-if-changed=wrapper.h");
-    println!("cargo:rerun-if-changed=./c-src/interface.c");
+    println!("cargo:rerun-if-changed=./c-src/interface.cpp");
     println!("cargo:rerun-if-changed=./c-src/interface.h");
 
     let bindings = bindgen::Builder::default()
