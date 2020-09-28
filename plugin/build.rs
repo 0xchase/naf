@@ -6,9 +6,9 @@ use std::path::PathBuf;
 fn main() {
     // Tell cargo to tell rustc to link the system bzip2
     // shared library.
-    cc::Build::new().file("./c-src/interface.c").compile("libinterface.a");
+    cc::Build::new().cpp(false).file("./c-src/interface.c").compile("libinterface.a");
 
-    //println!("cargo:rustc-link-search=native=./c-src");
+    println!("cargo:rustc-link-search=native=./c-src");
     println!("cargo:rustc-link-lib=static=interface");
 
     // Tell cargo to invalidate the built crate whenever the wrapper changes
