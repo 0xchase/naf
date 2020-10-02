@@ -1,0 +1,3 @@
+cargo:rustc-cfg=mtsafe_dlerror
+cargo:rustc-link-lib=dl
+cargo:rustc-env=LIBLOADING_TEST_TARGET=x86_64-unknown-linux-gnu

@@ -1,0 +1,45 @@
+TARGET = Some("x86_64-unknown-linux-gnu")
+OPT_LEVEL = Some("0")
+HOST = Some("x86_64-unknown-linux-gnu")
+CXX_x86_64-unknown-linux-gnu = None
+CXX_x86_64_unknown_linux_gnu = None
+HOST_CXX = None
+CXX = None
+CXXFLAGS_x86_64-unknown-linux-gnu = None
+CXXFLAGS_x86_64_unknown_linux_gnu = None
+HOST_CXXFLAGS = None
+CXXFLAGS = None
+CRATE_CC_NO_DEFAULTS = None
+DEBUG = Some("true")
+CARGO_CFG_TARGET_FEATURE = Some("fxsr,sse,sse2")
+running: "c++" "-O0" "-ffunction-sections" "-fdata-sections" "-fPIC" "-g" "-fno-omit-frame-pointer" "-m64" "-Wall" "-Wextra" "-o" "/home/oem/github/ninja-analysis-framework/plugin/target/debug/build/plugin-be866228655f4f5e/out/./c-src/interface.o" "-c" "./c-src/interface.cpp"
+cargo:warning=./c-src/interface.cpp: In function ‘void call_rust(BinaryNinja::BinaryView*, uint64_t, uint64_t)’:
+cargo:warning=./c-src/interface.cpp:13:41: warning: unused parameter ‘view’ [-Wunused-parameter]
+cargo:warning=   13 | void call_rust(BinaryNinja::BinaryView *view, uint64_t start, uint64_t length) {
+cargo:warning=      |                ~~~~~~~~~~~~~~~~~~~~~~~~~^~~~
+cargo:warning=./c-src/interface.cpp:13:56: warning: unused parameter ‘start’ [-Wunused-parameter]
+cargo:warning=   13 | void call_rust(BinaryNinja::BinaryView *view, uint64_t start, uint64_t length) {
+cargo:warning=      |                                               ~~~~~~~~~^~~~~
+cargo:warning=./c-src/interface.cpp:13:72: warning: unused parameter ‘length’ [-Wunused-parameter]
+cargo:warning=   13 | void call_rust(BinaryNinja::BinaryView *view, uint64_t start, uint64_t length) {
+cargo:warning=      |                                                               ~~~~~~~~~^~~~~~
+exit code: 0
+AR_x86_64-unknown-linux-gnu = None
+AR_x86_64_unknown_linux_gnu = None
+HOST_AR = None
+AR = None
+running: "ar" "crs" "/home/oem/github/ninja-analysis-framework/plugin/target/debug/build/plugin-be866228655f4f5e/out/libinterface.a" "/home/oem/github/ninja-analysis-framework/plugin/target/debug/build/plugin-be866228655f4f5e/out/./c-src/interface.o"
+exit code: 0
+cargo:rustc-link-lib=static=interface
+cargo:rustc-link-search=native=/home/oem/github/ninja-analysis-framework/plugin/target/debug/build/plugin-be866228655f4f5e/out
+CXXSTDLIB_x86_64-unknown-linux-gnu = None
+CXXSTDLIB_x86_64_unknown_linux_gnu = None
+HOST_CXXSTDLIB = None
+CXXSTDLIB = None
+cargo:rustc-link-lib=stdc++
+cargo:rustc-link-search=native=./c-src
+cargo:rustc-link-lib=static=interface
+cargo:rerun-if-changed=wrapper.h
+cargo:rerun-if-changed=./c-src/interface.cpp
+cargo:rerun-if-changed=./c-src/interface.h
+cargo:rerun-if-changed=././c-src/interface.h

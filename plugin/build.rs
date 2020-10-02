@@ -11,6 +11,11 @@ fn main() {
     println!("cargo:rustc-link-search=native=./c-src");
     println!("cargo:rustc-link-lib=static=interface");
 
+    //println!("cargo:rustc-link-lib=static=binaryninjaapi");
+
+    //println!("cargo:rustc-link-search=native=/home/oem/software/binary-ninja");
+    //println!("cargo:rustc-link-lib=static=binaryninjacore");
+
     // Tell cargo to invalidate the built crate whenever the wrapper changes
     println!("cargo:rerun-if-changed=wrapper.h");
     println!("cargo:rerun-if-changed=./c-src/interface.cpp");

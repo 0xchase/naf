@@ -4,19 +4,20 @@
 #include "mediumlevelilinstruction.h"
 #include "binaryninjacore.h"
 
-//#include <stdio.h>
+#include <stdio.h>
 
 //void cool_function(int i, char c, CoolStruct* cs) {
 //	printf("Calling C code!!!");
 //}
 
 void call_rust(BinaryNinja::BinaryView *view, uint64_t start, uint64_t length) {
-	printf("CALLING RUST!!!");
+	printf("\nCALLING C++\n");
 }
 
 extern "C"
 {
 	#include "interface.h"
+
 
 	extern void trigger1();
 

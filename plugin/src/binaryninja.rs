@@ -1,9 +1,10 @@
 include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 
+#[no_mangle]
 pub fn get_llil() -> Function {
     println!("Running test...");
-    let r = unsafe {square(5)};
-    println!("Running Rust main: {}\n", r);
+    //let r = unsafe {square(5)};
+    //println!("Running Rust main: {}\n", r);
 
     let f = Function {
         name: String::from("main"),
@@ -23,6 +24,7 @@ pub fn get_llil() -> Function {
     return f;
 }
 
+#[no_mangle]
 pub fn get_initial_state() -> State {
     return State {
         regs: Regs {
