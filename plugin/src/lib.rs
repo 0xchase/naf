@@ -24,7 +24,7 @@ pub extern "C" fn CorePluginInit() -> bool {
     command::register_for_address("Rust", "aaa", |bv: &BinaryView, addr: u64| { 
         use llil::ExprInfo::*;
         use llil::VisitorAction;
-
+        
         for block in &bv.basic_blocks_containing(addr) {
             let func = block.function();
 
