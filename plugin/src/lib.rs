@@ -12,8 +12,9 @@ use binja::command;
 //use binja::llil::{Liftable, LiftedExpr, LiftableWithSize, Mutable, NonSSA, LiftedNonSSA, Label};
 use binja::llil;
 
-mod liftcheck;
+//mod liftcheck;
 mod ninja;
+mod state;
 
 #[no_mangle]
 #[allow(non_snake_case)]
@@ -24,7 +25,7 @@ pub extern "C" fn CorePluginInit() -> bool {
     command::register_for_address("Rust", "aaa", |bv: &BinaryView, addr: u64| { 
         use llil::ExprInfo::*;
         use llil::VisitorAction;
-        
+
         for block in &bv.basic_blocks_containing(addr) {
             let func = block.function();
 
@@ -72,27 +73,32 @@ pub extern "C" fn CorePluginInit() -> bool {
 }
 
 pub fn run_plugin(bv: &BinaryView, addr: u64) {
-    ninja::test(ninja::Program{bv}, addr);
+    //ninja::test(ninja::Program{bv}, addr);
+    test(ninja::Program{bv});
 }
 
-
-pub fn test(bv: &BinaryView, addr: u64) {
-    for function in &bv.functions() {
-        info!("Found function {} at 0x{:x}", function.symbol().name(), function.start());
-        if let Ok(llil) = function.low_level_il() {
-            let blocks = function.basic_blocks();
-            
-            for block in blocks.into_iter() {
-                info!(" > Found block at 0x{:x}", block.raw_start());
-                
-                
-                for inst_addr in block.iter() {
-                    if let Some(inst) = llil.instruction_at(inst_addr) {
-                        //info!("  >> Instruction at 0x{:x}", inst_addr);
+use state::*;
+pub fn test(program: ninja::Program) {
+    let mut state = State::entry(program);
+    state.step();
+/*
+    for function in program.functions() {
+        //info!(" > Analyzing function {} at 0x{:x}", function.name, function.addr);
+        if function.name.eq("_start") {
+            for block in function.blocks() {
+                //info!("  >> Analyzing block at 0x{:x}", block.addr);
+                for inst in block.llil() {
+                    match inst {
+                        ninja::LlilInst::Call(c) => {
+                            info!("0x{:x} Calling 0x{:x}", c.address, c.target);
+                        },
+                        _ => {
+                            info!("Instruction");
+                        }
                     }
                 }
-                
             }
         }
     }
+*/
 }

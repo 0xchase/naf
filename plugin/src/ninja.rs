@@ -1,28 +1,5 @@
 //use binja::binaryview::{BinaryView, BinaryViewExt, BinaryViewType, BinaryViewTypeExt};
 use binja::binaryview::{BinaryView, BinaryViewExt};
-use binja::string::BnString;
-
-pub fn test(program: Program, addr: u64) {
-    //info!("Analyzing program {} from 0x{:x}", program.name(), addr);
-    for function in program.functions() {
-        //info!(" > Analyzing function {} at 0x{:x}", function.name, function.addr);
-        if function.name.eq("_start") {
-            for block in function.blocks() {
-                //info!("  >> Analyzing block at 0x{:x}", block.addr);
-                for inst in block.llil() {
-                    match inst {
-                        LlilInst::Call(c) => {
-                            info!("0x{:x} Calling 0x{:x}", c.address, c.target);
-                        }
-                        _ => {
-                            info!("Instruction");
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
 
 // ------------------------------------------------
 
@@ -30,7 +7,7 @@ pub struct Program<'a> {
     pub bv: &'a BinaryView,
 }
 impl<'a> Program<'a> {
-    fn functions(&self) -> Vec<Function> {
+    pub fn functions(&self) -> Vec<Function> {
         let mut vec: Vec<Function> = Vec::with_capacity(0);
         for function in &self.bv.functions() {
             vec.push( 
@@ -42,6 +19,49 @@ impl<'a> Program<'a> {
             )
         }
         return vec;
+    }
+
+    pub fn block_at(&self, addr: u64) -> Result<Block, String> {
+        for block in self.bv.basic_blocks_containing(addr).into_iter() {
+            return Ok(Block {
+                bv: self.bv,
+                addr: block.raw_start()
+            })
+        }
+        return Err(String::from("Couldn't find block at address"));
+    }
+
+    pub fn next_inst(&self, addr: u64) -> Result<LlilInst, String> {
+        if let Ok(block) = self.block_at(addr) {
+            let mut found: bool = false;
+            for inst in block.llil() {
+                info!("Checkking if inst at {:x}", addr);
+                if found {
+                    return Ok(inst);
+                }
+                match inst {
+                    LlilInst::Call(op) => {
+                        if op.addr == addr {
+                            found = true;
+                            info!("Found current instruction");
+                        } else {
+                            info!("Inst at {:x}", op.addr);
+                        }
+                    },
+                    LlilInst::SetReg(op) => {
+                        if op.addr == addr {
+                            found = true;
+                            info!("Found current instruction");
+                        } else {
+                            info!("Inst at {:x}", op.addr);
+                        }
+                    }
+                }
+            }
+        }
+
+        error!("Can't find inst");
+        return Err(String::from("Couldn't find instruction"));
     }
 
     fn name(&self) -> String {
@@ -58,7 +78,7 @@ pub struct Function<'a> {
 }
 
 impl<'a> Function<'a> {
-    fn blocks(&self) -> Vec<Block> {
+    pub fn blocks(&self) -> Vec<Block> {
         let mut vec: Vec<Block> = Vec::with_capacity(0);
 
         for function in &self.bv.functions() {
@@ -85,8 +105,19 @@ impl<'a> Function<'a> {
                 */
             }
         }
-
         return vec;
+    }
+
+    pub fn first_llil_addr(&self) -> u64 {
+        for block in self.blocks() {
+            for inst in block.llil() {
+                match inst {
+                    LlilInst::Call(op) => return op.addr,
+                    LlilInst::SetReg(op) => return op.addr,
+                }
+            }
+        }
+        return 0;
     }
 }
 
@@ -97,19 +128,17 @@ pub struct Block<'a> {
 }
 
 impl<'a> Block<'a> {
-    fn llil(&self) -> Vec<LlilInst> {
+    pub fn llil(&self) -> Vec<LlilInst> {
         //info!("Checking llil");
         let mut vec: Vec<LlilInst> = Vec::with_capacity(0);
         
         for disass_block in self.bv.basic_blocks_containing(self.addr).into_iter() {
-            for inst in disass_block.iter() {
-                //info!("Instruction");
-            }
             use llil::ExprInfo::*;
-
             
             if let Ok(llil) = disass_block.function().low_level_il() {
+                info!("Getting llil");
                 for llil_block in llil.basic_blocks().into_iter() {
+                    info!(" > Getting block for llil");
 
                     //info!(".");
                     for inst in llil_block.iter() {
@@ -120,7 +149,11 @@ impl<'a> Block<'a> {
                                 match op.target().info() { 
                                     binja::llil::ExprInfo::ConstPtr(p) => {
                                         //info!("0x{:x} Calling function at 0x{:x}", op.address(), p.value());
-                                        vec.push( LlilInst::Call(self::Call {address: op.address(), target: p.value()}) );
+                                        vec.push( LlilInst::Call(self::Call {addr: op.address(), target: p.value()}) );
+                                    },
+                                    binja::llil::ExprInfo::Load(l) => {
+                                        vec.push( LlilInst::Call(self::Call {addr: op.address(), target: 0x40000}) );
+
                                     },
                                     _ => error!("0x{:x} Calling ????????", op.address()),
                                 }
@@ -139,11 +172,11 @@ impl<'a> Block<'a> {
                             },
                             Nop(op) => {
                                 //info!("0x{:x} Nop", op.address())
-                                vec.push(LlilInst::Nop)
+                                //vec.push(LlilInst::Nop)
                             },
                             NoRet(op) => {
                                 //info!("0x{:x} NoRet", op.address())
-                                vec.push(LlilInst::NoRet)
+                                //vec.push(LlilInst::NoRet)
                             },
                             Push(op) => {
                                 match op.operand().info() {
@@ -160,7 +193,7 @@ impl<'a> Block<'a> {
                             },
                             Ret(op) => {
                                 //info!("0x{:x} Ret", op.address())
-                                vec.push(LlilInst::Ret)
+                                //vec.push(LlilInst::Ret)
                             },
                             SetFlag(op) => {
                                 //info!("0x{:x} SetFlag _ _", op.address())
@@ -169,11 +202,11 @@ impl<'a> Block<'a> {
                                 match op.source_expr().info() {
                                     Const(c) => {
                                         //info!("0x{:x} SetReg {:?} {}", op.address(), op.dest_reg(), c.value());
-                                        vec.push( LlilInst::SetReg(self::SetReg {reg: String::from("const"), value: 5}) );
+                                        vec.push( LlilInst::SetReg(self::SetReg {addr: op.address(), reg: String::from("const"), value: 5}) );
                                     },
                                     Reg(r) => {
                                         //info!("0x{:x} SetReg {:?} {:?}", op.address(), op.dest_reg(), r.source_reg());
-                                        vec.push( LlilInst::SetReg(self::SetReg {reg: String::from("eax"), value: 5}) );
+                                        vec.push( LlilInst::SetReg(self::SetReg {addr: op.address(), reg: String::from("eax"), value: 5}) );
                                     },
                                     _ => {
                                         //info!("0x{:x} SetReg {:?} {:?}", op.address(), op.dest_reg(), op.source_expr());
@@ -264,17 +297,15 @@ impl<'a> Block<'a> {
 pub enum LlilInst {
     Call(Call),
     SetReg(SetReg),
-    Ret,
-    NoRet,
-    Nop,
 }
 
 pub struct Call {
-    address: u64,
-    target: u64,
+    pub addr: u64,
+    pub target: u64,
 }
 
 pub struct SetReg {
+    pub addr: u64,
     reg: String,
     value: u64,
 }
