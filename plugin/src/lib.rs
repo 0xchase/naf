@@ -4,23 +4,21 @@ extern crate binja;
 extern crate riscv_dis;
 extern crate rayon;
 
-//use binja::binaryview::{BinaryView, BinaryViewExt, BinaryViewType, BinaryViewTypeExt};
-use binja::binaryview::{BinaryView, BinaryViewExt};
-
-use binja::command;
-
-//use binja::llil::{Liftable, LiftedExpr, LiftableWithSize, Mutable, NonSSA, LiftedNonSSA, Label};
-use binja::llil;
-
-//mod liftcheck;
 mod ninja;
 mod state;
+mod expression;
+mod liftcheck;
+mod run;
+
+use binja::binaryview::{BinaryView};
+use binja::command;
+use binja::llil;
+use ninja::*;
 
 #[no_mangle]
 #[allow(non_snake_case)]
 pub extern "C" fn CorePluginInit() -> bool {
     binja::logger::init(log::LevelFilter::Trace).expect("Failed to set up logging");
-
 /*
     command::register_for_address("Rust", "aaa", |bv: &BinaryView, addr: u64| { 
         use llil::ExprInfo::*;
@@ -64,24 +62,32 @@ pub extern "C" fn CorePluginInit() -> bool {
         info!("liftcheck: Function check completed");
     });
 */
-
     command::register_for_address("CHASE PLUGIN", "aaa", run_plugin);
-
-    //command::register("LiftCheckAllFunctionsParallel", "welp", liftcheck::check_all_functions_parallel);
-
     true
 }
 
-pub fn run_plugin(bv: &BinaryView, addr: u64) {
+pub fn run_plugin(bv: &BinaryView, _addr: u64) {
     //ninja::test(ninja::Program{bv}, addr);
-    test(ninja::Program{bv});
+
+    run::run(Program::new(bv));
 }
 
+/*
 use state::*;
-pub fn test(program: ninja::Program) {
+pub fn test(bv: &BinaryView) {
+
+    let program = Program::new(bv);
+
     let mut state = State::entry(program);
     state.step();
-/*
+    state.step();
+    state.step();
+    state.step();
+    state.step();
+    state.step();
+    state.step();
+    state.step();
+
     for function in program.functions() {
         //info!(" > Analyzing function {} at 0x{:x}", function.name, function.addr);
         if function.name.eq("_start") {
@@ -100,5 +106,6 @@ pub fn test(program: ninja::Program) {
             }
         }
     }
-*/
+
 }
+*/

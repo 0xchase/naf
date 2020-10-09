@@ -313,9 +313,9 @@ fn check_expression(expr: &Expression<CoreArchitecture, Finalized, NonSSA<Lifted
     }
 }
 
-fn check_instruction(inst: &Instruction<CoreArchitecture, Finalized, NonSSA<LiftedNonSSA>>) {
+pub fn check_instruction(inst: &Instruction<CoreArchitecture, Finalized, NonSSA<LiftedNonSSA>>) {
     use llil::InstrInfo::*;
-
+    
     match inst.info() {
         SetReg(op) => {
             let required_expr_size = op.size();
