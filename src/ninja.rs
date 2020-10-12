@@ -1,4 +1,5 @@
 use binja::binaryview::{BinaryView, BinaryViewExt};
+use binja::symbol::SymType;
 use expression;
 
 pub struct Program<'a> {
@@ -11,9 +12,28 @@ impl<'a> Program<'a> {
             bv: bv,
         }
     }
+
+    pub fn symbols(&self) {
+        for symbol in self.bv.symbols().into_iter() {
+            info!("At symbol {} {} {}", symbol.address(), symbol.short_name(), symbol.name());
+            match symbol.sym_type() {
+                SymType::Function => info!(" > function"),
+                SymType::LibraryFunction => info!(" > libraryfunction"),
+                SymType::ImportAddress => info!(" > import address"),
+                SymType::ImportedFunction => info!(" > imported function"),
+                SymType::Data => info!(" > data"),
+                SymType::ImportedData => info!(" > imported data"),
+                SymType::External => info!(" > external"),
+            }
+        }
+    }
+
     pub fn functions(&self) -> Vec<Function> {
         let mut vec: Vec<Function> = Vec::with_capacity(0);
         for function in &self.bv.functions() {
+
+            let mut count: u64 = 0;
+
             vec.push(
                 Function {
                     bv: self.bv,
@@ -28,10 +48,12 @@ impl<'a> Program<'a> {
     pub fn function_at(&self, addr: u64) -> Result<Function, String> {
         let functions = self.bv.functions_at(addr);
         for function in &functions {
+            let mut count: u64 = 0;
+
             return Ok(Function {
                 bv: self.bv,
                 name: String::from(function.symbol().name().to_ascii_lowercase()),
-                addr: function.start()
+                addr: function.start(),
             })
         }
         return Err(String::from("Function not found"));
@@ -115,6 +137,17 @@ impl<'a> Function<'a> {
         }
         return 0;
     }
+
+    pub fn length(&self) -> u64 {
+        let mut count: u64 = 0;
+        for block in self.blocks() {
+            for inst in block.llil() {
+                count += 1;
+            }
+        }
+
+        return count;
+    }
 }
 
 pub struct Block<'a> {
@@ -134,13 +167,15 @@ impl<'a> Block<'a> {
                 for block in &llil.basic_blocks() {
                     for inst in &*block {
                         match inst.info() {
-                            SetReg(op) => vec.push(
-                                Inst {
+                            SetReg(op) => {
+                                //let _temp = &op.source_expr().info();
+                                vec.push(Inst {
                                     addr: op.address(),
-                                    llil: LlilInst::SetReg(SetReg {addr: 5}),
+                                    llil: LlilInst::SetReg(SetReg {reg: format!("{:?}", op.dest_reg()), expr: expression::build_expression(&op.source_expr())}),
+                                    //llil: LlilInst::SetReg(SetReg {addr: 5}),
                                     disass: String::from("mov eax, eax"),
                                 }
-                            ),
+                            )},
                             SetRegSplit(op) => vec.push(
                                 Inst {
                                     addr: op.address(),
@@ -411,7 +446,9 @@ pub enum LlilInst {
 }
 
 pub struct SetReg {
-    pub addr: u64,
+    pub expr: expression::Expr,
+    pub reg: String,
+    //pub addr: u64,
 }
 
 pub struct SetRegSplit {

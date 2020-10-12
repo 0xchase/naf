@@ -21,13 +21,13 @@ pub struct Undef {
 
 pub fn build_expression(expr: &Expression<CoreArchitecture, Finalized, NonSSA<RegularNonSSA>, ValueExpr>) -> Expr {
     use llil::ExprInfo::*;
+    //info!("building expression");
 
     match expr.info() {
         Reg(ref op) => {
             Expr::Reg(self::Reg {
                 name: String::from(format!("{:?}", op.source_reg()))
             })
-            
         }
         Const(ref op) | ConstPtr(ref op) => {
             Expr::Value(op.value())

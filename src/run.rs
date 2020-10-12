@@ -5,7 +5,15 @@ pub fn run(program: Program) {
     
     let mut state = State::entry(&program);
 
-    for _ in 0..200 {
+    for i in 0..50 {
         state.step();
+
+        if i % 4 == 0 {
+            //state.print();
+        }
     }
+
+    state.print();
+
+    program.symbols();
 }

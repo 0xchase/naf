@@ -8,6 +8,7 @@ mod ninja;
 mod state;
 mod expression;
 mod liftcheck;
+mod procedures;
 mod run;
 
 use binja::binaryview::{BinaryView};
