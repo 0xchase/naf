@@ -5,15 +5,13 @@ pub fn run(program: Program) {
     
     let mut state = State::entry(&program);
 
-    for i in 0..50 {
+    for i in 0..70 {
         state.step();
-
-        if i % 4 == 0 {
-            //state.print();
-        }
     }
+    
+    program.seek(state.addr);
 
     state.print();
 
-    program.symbols();
+    //program.symbols();
 }

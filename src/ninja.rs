@@ -13,6 +13,17 @@ impl<'a> Program<'a> {
         }
     }
 
+    pub fn seek(&self, addr: u64) {
+        if let Err(_) = self.bv.metadata().navigate_to(self.bv.metadata().current_view(), addr) {
+            error!("Failed to seek");
+        }
+        
+    }
+
+    pub fn offset(&self) -> u64 {
+        return self.bv.metadata().current_offset();
+    }
+
     pub fn symbols(&self) {
         for symbol in self.bv.symbols().into_iter() {
             info!("At symbol {} {} {}", symbol.address(), symbol.short_name(), symbol.name());
@@ -162,6 +173,8 @@ impl<'a> Block<'a> {
     pub fn llil(&self) -> Vec<Inst> {
         let mut vec: Vec<Inst> = Vec::with_capacity(0);
         
+        let mut index: u64 = 0;
+
         for disass_block in self.bv.basic_blocks_containing(self.addr).into_iter() {       
             if let Ok(llil) = disass_block.function().low_level_il() {
                 for block in &llil.basic_blocks() {
@@ -235,7 +248,7 @@ impl<'a> Block<'a> {
                             If(op) => vec.push(
                                 Inst {
                                     addr: op.address(),
-                                    llil: LlilInst::If(If {addr: 5}),
+                                    llil: LlilInst::If(If {condition: expression::build_expression(&op.condition()), target_true: 0x40082b, target_false: 0x400817}),
                                     disass: String::from("mov eax, eax"),
                                 }
                             ),
@@ -247,6 +260,8 @@ impl<'a> Block<'a> {
                                 }
                             ),
                         }
+
+                        index += 1;
                     }
                 }
             /*
@@ -484,7 +499,9 @@ pub struct Ret {
 }
 
 pub struct If {
-    pub addr: u64,
+    pub condition: expression::Expr,
+    pub target_true: u64,
+    pub target_false: u64,
 }
 
 pub struct Undef {

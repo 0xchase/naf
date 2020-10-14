@@ -37,23 +37,26 @@ impl<'a> State<'a> {
         }
     }
 
+    fn step_ip(&mut self) {
+        if let Ok(inst2) = self.program.inst_after(self.addr) {
+            self.addr = inst2.addr;
+        }
+    }
+
     pub fn step(&mut self) {
         use ninja::LlilInst::*;
         use expression::Expr::*;
+        use expression::eval_expression;
+
         if let Ok(inst) = self.program.inst_at(self.addr) {
             self.addr = inst.addr;
 
             match inst.llil {
                 SetReg(llil) => {
-                    match llil.expr {
-                        Value(v) => {
-                            info!("0x{:x} Set register {} to 0x{:x}", self.addr, llil.reg, v);
-                            self.regs.set(llil.reg, v);
-                        }
-                        _ => {
-                            info!("0x{:x} Set register", self.addr);
-                        }
-                    }
+                    let val = eval_expression(llil.expr, self);
+                    self.regs.set(llil.reg, val);
+                    info!("0x{:x} Set register to 0x{:x}", self.addr, val);
+                    self.step_ip()
                 }
                 Push(llil) => {
                     match llil.expr {
@@ -64,6 +67,18 @@ impl<'a> State<'a> {
                         _ => info!("0x{:x} Pushing other", self.addr),
                     }
                     self.regs.rsp -= 8;
+                    self.step_ip()
+                }
+                If(llil) => {
+                    let result: u64 = eval_expression(llil.condition, self);
+                    info!("0x{:x} Comparing, flag has value 0x{:x}", self.addr, result);
+                    if result == 0 {
+                        self.addr = llil.target_false;
+                        info!(" > Branching false");
+                    } else {
+                        self.addr = llil.target_true;
+                        info!(" > Branching true");
+                    }
                 }
                 Call(llil) => {
                     match llil.target {
@@ -75,30 +90,32 @@ impl<'a> State<'a> {
                                     procedures::printf(self);
                                 } else if function.name == String::from("fgets") {
                                     procedures::fgets(self);
+                                } else if function.name == String::from("strlen") {
+                                    procedures::strlen(self);
+                                } else if function.name == String::from("atoi") {
+                                    procedures::atoi(self); 
                                 } else {
                                     if let Ok(inst2) = self.program.inst_after(self.addr) {
                                         self.call_stack.push(inst2.addr);
                                     } else {
                                         error!("0x{:x} Coudln't add to call stack", self.addr);
                                     }
-                                    
+
                                     info!("0x{:x} Calling address 0x{:x}", self.addr, v);
                                     self.addr = v + 4;
                                 }
                             } else {
                                 error!("Couldn't call function");
                             }
+                            self.step_ip()
                         },
                         _ => error!("0x{:x} Calling other", self.addr),
                     }
                 }
                 _ => {
                     info!("0x{:x} Stepping", self.addr);
+                    self.step_ip()
                 }
-            }
-
-            if let Ok(inst2) = self.program.inst_after(self.addr) {
-                self.addr = inst2.addr;
             }
         } else {
             if let Some(temp) = self.call_stack.pop() {
@@ -201,7 +218,8 @@ impl Regsx64 {
             _ => error!("Couldn't set register {}", name)
         }
     }
-    pub fn get(&mut self, name: String) -> u64 {
+
+    pub fn get(&self, name: String) -> u64 {
         match name.as_str() {
             "rax" => self.rax,
             "rbx" => self.rbx,
