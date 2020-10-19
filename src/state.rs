@@ -5,7 +5,7 @@ use procedures;
 pub struct State<'a> {
     program: &'a ninja::Program<'a>,
     pub addr: u64,
-    pub memory: HashMap<u64, u64>,
+    pub memory: Memory,
     pub regs: Regsx64,
     call_stack: Vec<u64>,
 }
@@ -21,7 +21,7 @@ impl<'a> State<'a> {
                 return State {
                     program: program,
                     addr: temp,
-                    memory: HashMap::new(),
+                    memory: Memory::new(),
                     regs: Regsx64::new(),
                     call_stack: Vec::new(),
                 }
@@ -31,7 +31,7 @@ impl<'a> State<'a> {
         return State {
             program: program,
             addr: 0,
-            memory: HashMap::new(),
+            memory: Memory::new(),
             regs: Regsx64::new(),
             call_stack: Vec::new()
         }
@@ -47,7 +47,7 @@ impl<'a> State<'a> {
         use ninja::LlilInst::*;
         use expression::Expr::*;
         use expression::eval_expression;
-
+ 
         if let Ok(inst) = self.program.inst_at(self.addr) {
             self.addr = inst.addr;
 
@@ -62,7 +62,7 @@ impl<'a> State<'a> {
                     match llil.expr {
                         Reg(r) => {
                             info!("0x{:x} Pushing register {}", self.addr, r.name);
-                            self.memory.insert(self.regs.rsp, self.regs.get(r.name));
+                            self.memory.store(self.regs.rsp, self.regs.get(r.name));
                         },
                         _ => info!("0x{:x} Pushing other", self.addr),
                     }
@@ -79,6 +79,16 @@ impl<'a> State<'a> {
                         self.addr = llil.target_true;
                         info!(" > Branching true");
                     }
+                }
+                Store(llil) => {
+                    let val: u64 = eval_expression(llil.source_expr, self);
+                    let addr: u64 = eval_expression(llil.dest_mem_expr, self);
+
+                    self.memory.store(addr, val);
+
+                    info!("0x{:x} Stored 0x{:x} at 0x{:x}", self.addr, val, addr);
+
+                    self.step_ip();
                 }
                 Call(llil) => {
                     match llil.target {
@@ -113,7 +123,7 @@ impl<'a> State<'a> {
                     }
                 }
                 _ => {
-                    info!("0x{:x} Stepping", self.addr);
+                    error!("0x{:x} Stepping", self.addr);
                     self.step_ip()
                 }
             }
@@ -137,12 +147,39 @@ impl<'a> State<'a> {
         info!("\trbp 0x{:x}\trflags 0x{:x}\trsp 0x{:x}", self.regs.rbp, self.regs.rflags, self.regs.rsp);
         info!("");
 
-        for (key, value) in &self.memory {
-            info!("\t0x{:x}: {}", key, value);
-        }
+        self.memory.print();
 
         info!("______________________________________");
 
+    }
+}
+
+pub struct Memory {
+    pub map: HashMap<u64, u64>
+}
+
+impl Memory {
+    fn new() -> Memory {
+        return Memory {
+            map: HashMap::new()
+        }
+    }
+
+    pub fn store(&mut self, addr: u64, value: u64) {
+        self.map.insert(addr, value);
+    }
+    
+    pub fn load(&mut self, addr: u64) -> u64 {
+        return match self.map.get_key_value(&addr) {
+            Some((&key, &value)) => return value,
+            _ => 0
+        };
+    }
+
+    pub fn print(&self) {
+        for (key, value) in &self.map {
+            info!("\t0x{:x}: {}", key, value);
+        }
     }
 }
 

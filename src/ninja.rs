@@ -39,6 +39,16 @@ impl<'a> Program<'a> {
         }
     }
 
+    pub fn strings(&self) {
+        for symbol in self.bv.symbols().into_iter() {
+            info!("At symbol {} {} {}", symbol.address(), symbol.short_name(), symbol.name());
+            match symbol.sym_type() {
+                SymType::Data => info!("Found data: {}", symbol.name()),
+                _ => (),
+            }
+        }
+    }
+
     pub fn functions(&self) -> Vec<Function> {
         let mut vec: Vec<Function> = Vec::with_capacity(0);
         for function in &self.bv.functions() {
@@ -159,6 +169,17 @@ impl<'a> Function<'a> {
 
         return count;
     }
+
+    pub fn llil_at_index(&self, index: usize) -> Result<Inst, String> {
+        for function in &self.bv.functions() {
+            if function.start() == self.addr {
+                if let Ok(llil) = function.low_level_il() {
+                    return Ok(build_inst(llil.instruction_from_idx(index)));
+                }
+            }
+        }
+        return Err(String::from("Instruction index is out of range"));
+    }
 }
 
 pub struct Block<'a> {
@@ -179,88 +200,7 @@ impl<'a> Block<'a> {
             if let Ok(llil) = disass_block.function().low_level_il() {
                 for block in &llil.basic_blocks() {
                     for inst in &*block {
-                        match inst.info() {
-                            SetReg(op) => {
-                                //let _temp = &op.source_expr().info();
-                                vec.push(Inst {
-                                    addr: op.address(),
-                                    llil: LlilInst::SetReg(SetReg {reg: format!("{:?}", op.dest_reg()), expr: expression::build_expression(&op.source_expr())}),
-                                    //llil: LlilInst::SetReg(SetReg {addr: 5}),
-                                    disass: String::from("mov eax, eax"),
-                                }
-                            )},
-                            SetRegSplit(op) => vec.push(
-                                Inst {
-                                    addr: op.address(),
-                                    llil: LlilInst::SetRegSplit(SetRegSplit {addr: 5}),
-                                    disass: String::from("mov eax, eax"),
-                                }
-                            ),
-                            SetFlag(op) => vec.push(
-                                Inst {
-                                    addr: op.address(),
-                                    llil: LlilInst::SetFlag(SetFlag {addr: 5}),
-                                    disass: String::from("mov eax, eax"),
-                                }
-                            ),
-                            Store(op) => vec.push(
-                                Inst {
-                                    addr: op.address(),
-                                    llil: LlilInst::Store(Store {addr: 5}),
-                                    disass: String::from("mov eax, eax"),
-                                }
-                            ),
-                            Push(op) => vec.push(
-                                Inst {
-                                    addr: op.address(),
-                                    llil: LlilInst::Push(Push {expr: expression::build_expression(&op.operand())}),
-                                    disass: String::from("mov eax, eax"),
-                                }
-                            ),
-                            Jump(op) => vec.push(
-                                Inst {
-                                    addr: op.address(),
-                                    llil: LlilInst::Jump(Jump {addr: 5}),
-                                    disass: String::from("mov eax, eax"),
-                                }
-                            ),
-                            JumpTo(op) => vec.push(
-                                Inst {
-                                    addr: op.address(),
-                                    llil: LlilInst::JumpTo(JumpTo {addr: 5}),
-                                    disass: String::from("mov eax, eax"),
-                                }
-                            ),
-                            Call(op) => vec.push(
-                                Inst {
-                                    addr: op.address(),
-                                    llil: LlilInst::Call(Call {target: expression::build_expression(&op.target())}),
-                                    disass: String::from("mov eax, eax"),
-                                }
-                            ),
-                            Ret(op) => vec.push(
-                                Inst {
-                                    addr: op.address(),
-                                    llil: LlilInst::Ret(Ret {addr: 5}),
-                                    disass: String::from("mov eax, eax"),
-                                }
-                            ),
-                            If(op) => vec.push(
-                                Inst {
-                                    addr: op.address(),
-                                    llil: LlilInst::If(If {condition: expression::build_expression(&op.condition()), target_true: 0x40082b, target_false: 0x400817}),
-                                    disass: String::from("mov eax, eax"),
-                                }
-                            ),
-                            _ => vec.push(
-                                Inst {
-                                    addr: 0,
-                                    llil: LlilInst::Undef(Undef {addr: 0}),
-                                    disass: String::from("mov eax, eax"),
-                                }
-                            ),
-                        }
-
+                        vec.push(build_inst(inst));
                         index += 1;
                     }
                 }
@@ -440,6 +380,79 @@ impl<'a> Block<'a> {
     }
 }
 
+pub fn build_inst(inst: binja::llil::Instruction<binja::architecture::CoreArchitecture, binja::llil::Finalized, binja::llil::NonSSA<binja::llil::RegularNonSSA>>) -> Inst {
+    match inst.info() {
+        SetReg(op) => {
+            Inst {
+                addr: op.address(),
+                llil: LlilInst::SetReg(SetReg {reg: format!("{:?}", op.dest_reg()), expr: expression::build_expression(&op.source_expr())}),
+                //llil: LlilInst::SetReg(SetReg {addr: 5}),
+                disass: String::from("mov eax, eax"),
+            }
+        },
+        SetRegSplit(op) =>
+            Inst {
+                addr: op.address(),
+                llil: LlilInst::SetRegSplit(SetRegSplit {addr: 5}),
+                disass: String::from("mov eax, eax"),
+            },
+        SetFlag(op) =>
+            Inst {
+                addr: op.address(),
+                llil: LlilInst::SetFlag(SetFlag {addr: 5}),
+                disass: String::from("mov eax, eax"),
+            },
+        Store(op) =>
+            Inst {
+                addr: op.address(),
+                llil: LlilInst::Store(Store {source_expr: expression::build_expression(&op.source_expr()), dest_mem_expr: expression::build_expression(&op.dest_mem_expr())}),
+                disass: String::from("mov eax, eax"),
+            },
+        Push(op) =>
+            Inst {
+                addr: op.address(),
+                llil: LlilInst::Push(Push {expr: expression::build_expression(&op.operand())}),
+                disass: String::from("mov eax, eax"),
+            },
+        Jump(op) =>
+            Inst {
+                addr: op.address(),
+                llil: LlilInst::Jump(Jump {addr: 5}),
+                disass: String::from("mov eax, eax"),
+            },
+        JumpTo(op) =>
+            Inst {
+                addr: op.address(),
+                llil: LlilInst::JumpTo(JumpTo {addr: 5}),
+                disass: String::from("mov eax, eax"),
+            },
+        Call(op) =>
+            Inst {
+                addr: op.address(),
+                llil: LlilInst::Call(Call {target: expression::build_expression(&op.target())}),
+                disass: String::from("mov eax, eax"),
+            },
+        Ret(op) =>
+            Inst {
+                addr: op.address(),
+                llil: LlilInst::Ret(Ret {addr: 5}),
+                disass: String::from("mov eax, eax"),
+            },
+        If(op) =>
+            Inst {
+                addr: op.address(),
+                llil: LlilInst::If(If {condition: expression::build_expression(&op.condition()), target_true: 0x40082b, target_false: 0x400817}),
+                disass: String::from("mov eax, eax"),
+            },
+        _ =>
+            Inst {
+                addr: 0,
+                llil: LlilInst::Undef(Undef {addr: 0}),
+                disass: String::from("mov eax, eax"),
+            },
+    }
+}
+
 pub struct Inst {
     pub addr: u64,
     pub llil: LlilInst,
@@ -475,7 +488,8 @@ pub struct SetFlag {
 }
 
 pub struct Store {
-    pub addr: u64,
+    pub dest_mem_expr: expression::Expr,
+    pub source_expr: expression::Expr,
 }
 
 pub struct Push {

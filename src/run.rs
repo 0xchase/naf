@@ -4,8 +4,8 @@ use state::*;
 pub fn run(program: Program) {
     
     let mut state = State::entry(&program);
-
-    for i in 0..70 {
+    
+    for _ in 0..80 {
         state.step();
     }
     
@@ -13,5 +13,6 @@ pub fn run(program: Program) {
 
     state.print();
 
+    //program.strings();
     //program.symbols();
 }
