@@ -4,10 +4,12 @@ version = "0.1.0"
 authors = ["Ryan Snyder <ryan.snyder.or@gmail.com>"]
 
 [dependencies]
-binja = { git = "https://gitlab.com/rsnyder/binja-rs.git", features = ["rayon"] }
+#binja = { git = "https://gitlab.com/rsnyder/binja-rs.git", features = ["rayon"] }
+binja = { path = "/home/oem/software/binja-rs/", features = ["rayon"] }
 riscv-dis = { git = "https://gitlab.com/binja-rs/riscv-dis.git" }
 log = "0.4"
 rayon = "1.0"
+z3 = "0.5.0"
 
 [lib]
 crate-type = ["cdylib"]

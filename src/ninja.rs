@@ -17,7 +17,6 @@ impl<'a> Program<'a> {
         if let Err(_) = self.bv.metadata().navigate_to(self.bv.metadata().current_view(), addr) {
             error!("Failed to seek");
         }
-        
     }
 
     pub fn offset(&self) -> u64 {
@@ -39,6 +38,12 @@ impl<'a> Program<'a> {
         }
     }
 
+    pub fn string_at_addr(&self, addr: u64) {
+        //self.bv.string_at_addr(addr);
+        //self.bv.offset_
+        //self.bv.string_at_addr() as u64;
+    }
+
     pub fn strings(&self) {
         for symbol in self.bv.symbols().into_iter() {
             info!("At symbol {} {} {}", symbol.address(), symbol.short_name(), symbol.name());
@@ -52,9 +57,6 @@ impl<'a> Program<'a> {
     pub fn functions(&self) -> Vec<Function> {
         let mut vec: Vec<Function> = Vec::with_capacity(0);
         for function in &self.bv.functions() {
-
-            let mut count: u64 = 0;
-
             vec.push(
                 Function {
                     bv: self.bv,
@@ -69,8 +71,6 @@ impl<'a> Program<'a> {
     pub fn function_at(&self, addr: u64) -> Result<Function, String> {
         let functions = self.bv.functions_at(addr);
         for function in &functions {
-            let mut count: u64 = 0;
-
             return Ok(Function {
                 bv: self.bv,
                 name: String::from(function.symbol().name().to_ascii_lowercase()),
@@ -78,6 +78,19 @@ impl<'a> Program<'a> {
             })
         }
         return Err(String::from("Function not found"));
+    }
+
+    pub fn function_containing(&self, addr: u64) -> Result<Function, String> {
+        for block in self.bv.basic_blocks_containing(addr).into_iter() {
+            let function = block.function();
+            return Ok(Function {
+                bv: self.bv,
+                name: String::from(function.symbol().name().to_ascii_lowercase()),
+                addr: function.start()
+            })
+        }
+
+        return Err(String::from("Couldn't find function"));
     }
 
     pub fn block_at(&self, addr: u64) -> Result<Block, String> {
@@ -444,10 +457,52 @@ pub fn build_inst(inst: binja::llil::Instruction<binja::architecture::CoreArchit
                 llil: LlilInst::If(If {condition: expression::build_expression(&op.condition()), target_true: 0x40082b, target_false: 0x400817}),
                 disass: String::from("mov eax, eax"),
             },
+        Nop(op) => 
+            Inst {
+                addr: op.address(),
+                llil: LlilInst::Nop(),
+                disass: String::from("mov eax, eax"),
+            },
+        NoRet(op) =>
+            Inst {
+                addr: op.address(),
+                llil: LlilInst::NoRet(),
+                disass: String::from("mov eax, eax"),
+            },
+        Goto(op) =>
+            Inst {
+                addr: op.address(),
+                llil: LlilInst::Goto(Goto {target: 5}),
+                disass: String::from("mov eax, eax"),
+            },
+        Syscall(op) =>
+            Inst {
+                addr: op.address(),
+                llil: LlilInst::Syscall(),
+                disass: String::from("mov eax, eax"),
+            },
+        Bp(op) =>
+            Inst {
+                addr: op.address(),
+                llil: LlilInst::Bp(),
+                disass: String::from("mov eax, eax"),
+            },
+        Trap(op) =>
+            Inst {
+                addr: op.address(),
+                llil: LlilInst::Trap(),
+                disass: String::from("mov eax, eax"),
+            },
+        Undef(op) =>
+            Inst {
+                addr: op.address(),
+                llil: LlilInst::Undef(),
+                disass: String::from("mov eax, eax"),
+            },
         _ =>
             Inst {
                 addr: 0,
-                llil: LlilInst::Undef(Undef {addr: 0}),
+                llil: LlilInst::Undef(),
                 disass: String::from("mov eax, eax"),
             },
     }
@@ -470,13 +525,18 @@ pub enum LlilInst {
     Call(Call),
     Ret(Ret),
     If(If),
-    Undef(Undef),
+    Nop(),
+    NoRet(),
+    Goto(Goto),
+    Syscall(),
+    Bp(),
+    Trap(),
+    Undef(),
 }
 
 pub struct SetReg {
     pub expr: expression::Expr,
     pub reg: String,
-    //pub addr: u64,
 }
 
 pub struct SetRegSplit {
@@ -518,6 +578,7 @@ pub struct If {
     pub target_false: u64,
 }
 
-pub struct Undef {
-    pub addr: u64,
+pub struct Goto {
+    pub target: u64,
 }
+

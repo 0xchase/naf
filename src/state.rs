@@ -5,6 +5,7 @@ use procedures;
 pub struct State<'a> {
     program: &'a ninja::Program<'a>,
     pub addr: u64,
+    pub index: usize,
     pub memory: Memory,
     pub regs: Regsx64,
     call_stack: Vec<u64>,
@@ -21,6 +22,7 @@ impl<'a> State<'a> {
                 return State {
                     program: program,
                     addr: temp,
+                    index: 0,
                     memory: Memory::new(),
                     regs: Regsx64::new(),
                     call_stack: Vec::new(),
@@ -31,101 +33,109 @@ impl<'a> State<'a> {
         return State {
             program: program,
             addr: 0,
+            index: 0,
             memory: Memory::new(),
             regs: Regsx64::new(),
             call_stack: Vec::new()
         }
     }
 
-    fn step_ip(&mut self) {
+    fn step_ip2(&mut self) {
         if let Ok(inst2) = self.program.inst_after(self.addr) {
             self.addr = inst2.addr;
         }
     }
 
-    pub fn step(&mut self) {
+    pub fn execute_instruction(&mut self, inst: ninja::Inst) {
         use ninja::LlilInst::*;
         use expression::Expr::*;
         use expression::eval_expression;
- 
-        if let Ok(inst) = self.program.inst_at(self.addr) {
-            self.addr = inst.addr;
 
-            match inst.llil {
-                SetReg(llil) => {
-                    let val = eval_expression(llil.expr, self);
-                    self.regs.set(llil.reg, val);
-                    info!("0x{:x} Set register to 0x{:x}", self.addr, val);
-                    self.step_ip()
+        match inst.llil {
+            SetReg(llil) => {
+                let val = eval_expression(llil.expr, self);
+                self.regs.set(llil.reg, val);
+                info!("0x{:x} Set register to 0x{:x}", self.addr, val);
+                //self.step_ip()
+            }
+            Push(llil) => {
+                match llil.expr {
+                    Reg(r) => {
+                        info!("0x{:x} Pushing register {}", self.addr, r.name);
+                        self.memory.store(self.regs.rsp, self.regs.get(r.name));
+                    },
+                    _ => info!("0x{:x} Pushing other", self.addr),
                 }
-                Push(llil) => {
-                    match llil.expr {
-                        Reg(r) => {
-                            info!("0x{:x} Pushing register {}", self.addr, r.name);
-                            self.memory.store(self.regs.rsp, self.regs.get(r.name));
-                        },
-                        _ => info!("0x{:x} Pushing other", self.addr),
-                    }
-                    self.regs.rsp -= 8;
-                    self.step_ip()
+                self.regs.rsp -= 8;
+                //self.step_ip()
+            }
+            If(llil) => {
+                let result: u64 = eval_expression(llil.condition, self);
+                info!("0x{:x} Compare returned 0x{:x}", self.addr, result);
+                if result == 0 {
+                    self.addr = llil.target_false;
+                    info!(" > Branching false");
+                } else {
+                    self.addr = llil.target_true;
+                    info!(" > Branching true");
                 }
-                If(llil) => {
-                    let result: u64 = eval_expression(llil.condition, self);
-                    info!("0x{:x} Comparing, flag has value 0x{:x}", self.addr, result);
-                    if result == 0 {
-                        self.addr = llil.target_false;
-                        info!(" > Branching false");
-                    } else {
-                        self.addr = llil.target_true;
-                        info!(" > Branching true");
-                    }
-                }
-                Store(llil) => {
-                    let val: u64 = eval_expression(llil.source_expr, self);
-                    let addr: u64 = eval_expression(llil.dest_mem_expr, self);
+            }
+            Store(llil) => {
+                let val: u64 = eval_expression(llil.source_expr, self);
+                let addr: u64 = eval_expression(llil.dest_mem_expr, self);
 
-                    self.memory.store(addr, val);
+                self.memory.store(addr, val);
 
-                    info!("0x{:x} Stored 0x{:x} at 0x{:x}", self.addr, val, addr);
+                info!("0x{:x} Stored 0x{:x} at 0x{:x}", self.addr, val, addr);
 
-                    self.step_ip();
-                }
-                Call(llil) => {
-                    match llil.target {
-                        Value(v) => {
-                            if let Ok(function) = self.program.function_at(v) {
-                                if function.name == String::from("puts") {
-                                    procedures::puts(self);
-                                } else if function.name == String::from("printf") {
-                                    procedures::printf(self);
-                                } else if function.name == String::from("fgets") {
-                                    procedures::fgets(self);
-                                } else if function.name == String::from("strlen") {
-                                    procedures::strlen(self);
-                                } else if function.name == String::from("atoi") {
-                                    procedures::atoi(self); 
-                                } else {
-                                    if let Ok(inst2) = self.program.inst_after(self.addr) {
-                                        self.call_stack.push(inst2.addr);
-                                    } else {
-                                        error!("0x{:x} Coudln't add to call stack", self.addr);
-                                    }
-
-                                    info!("0x{:x} Calling address 0x{:x}", self.addr, v);
-                                    self.addr = v + 4;
-                                }
+                //self.step_ip();
+            }
+            Call(llil) => {
+                match llil.target {
+                    Value(v) => {
+                        if let Ok(function) = self.program.function_at(v) {
+                            if function.name == String::from("puts") {
+                                procedures::puts(self);
+                            } else if function.name == String::from("printf") {
+                                procedures::printf(self);
+                            } else if function.name == String::from("fgets") {
+                                procedures::fgets(self);
+                            } else if function.name == String::from("strlen") {
+                                procedures::strlen(self);
+                            } else if function.name == String::from("atoi") {
+                                procedures::atoi(self); 
                             } else {
-                                error!("Couldn't call function");
+                                if let Ok(inst2) = self.program.inst_after(self.addr) {
+                                    self.call_stack.push(inst2.addr);
+                                } else {
+                                    error!("0x{:x} Coudln't add to call stack", self.addr);
+                                }
+
+                                info!("0x{:x} Calling address 0x{:x}", self.addr, v);
+                                self.addr = v + 4;
                             }
-                            self.step_ip()
-                        },
-                        _ => error!("0x{:x} Calling other", self.addr),
-                    }
+                        } else {
+                            error!("Couldn't call function");
+                        }
+                        //self.step_ip()
+                    },
+                    _ => error!("0x{:x} Calling other", self.addr),
                 }
-                _ => {
-                    error!("0x{:x} Stepping", self.addr);
-                    self.step_ip()
-                }
+            }
+            _ => {
+                error!("0x{:x} Stepping", self.addr);
+                //self.step_ip()
+            }
+        }
+    }
+
+    pub fn step(&mut self) {
+        if let Ok(function) = self.program.function_containing(self.addr) {
+            if let Ok(inst) = function.llil_at_index(self.index) {
+                self.addr = inst.addr;
+
+                self.execute_instruction(inst);
+                self.index += 1;
             }
         } else {
             if let Some(temp) = self.call_stack.pop() {
@@ -293,6 +303,8 @@ impl Regsx64 {
             "esp" => self.rsp,
             "ebp" => self.rbp,
             "eip" => self.rip,
+
+            "fsbase" => 0,
             _ => {
                 error!("Couldn't get register {}", name);
                 return 0;

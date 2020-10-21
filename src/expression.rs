@@ -4,12 +4,22 @@ use state::State;
 
 pub enum Expr {
     Reg(Reg),
+    Flag(Flag),
+
+    Load(Load),
+
     Value(u64),
 
     Add(Arithmetic), Sub(Arithmetic), And(Arithmetic), Or(Arithmetic), Xor(Arithmetic), Mul(Arithmetic), Divu(Arithmetic), Divs(Arithmetic), Modu(Arithmetic), Mods(Arithmetic),
     Lsl(Arithmetic), Lsr(Arithmetic), Asr(Arithmetic), Rol(Arithmetic), Ror(Arithmetic),
     MulsDp(Arithmetic), MuluDp(Arithmetic),
     DivuDp(DivDp), DivsDp(DivDp), ModuDp(DivDp), ModsDp(DivDp), 
+
+    CmpE(Cmp),
+    CmpSlt(Cmp),
+    CmpSle(Cmp),
+    CmpSge(Cmp),
+    CmpSgt(Cmp),
 
     Undef(Undef),
 }
@@ -18,8 +28,21 @@ pub struct Reg {
     pub name: String
 }
 
+pub struct Load {
+    pub source_mem: Box<self::Expr>,
+}
+
+pub struct Flag {
+    pub name: String
+}
+
 pub struct Value {
     pub value: String
+}
+
+pub struct Cmp {
+    pub left: Box<self::Expr>, 
+    pub right: Box<self::Expr>
 }
 
 pub struct DivDp {
@@ -43,10 +66,29 @@ pub fn build_expression(expr: &Expression<CoreArchitecture, Finalized, NonSSA<Re
                 name: String::from(format!("{:?}", op.source_reg()))
             })
         }
-        
+
+        Flag(ref op) => {
+            Expr::Flag(self::Flag {
+                name: String::from(format!("{:?}", expr))
+            })
+        }
+
+        Load(ref op) => {
+            Expr::Load(self::Load {
+                source_mem: Box::new(build_expression(&op.source_mem_expr()))
+            })
+        }
+
         Const(ref op) | ConstPtr(ref op) => {
             Expr::Value(op.value())
         }
+
+
+        CmpE (ref op) => {Expr::CmpE(self::Cmp {left: Box::new(build_expression(&op.left())), right: Box::new(build_expression(&op.right()))})}
+        CmpSlt (ref op) => {Expr::CmpSlt(self::Cmp {left: Box::new(build_expression(&op.left())), right: Box::new(build_expression(&op.right()))})}
+        CmpSle (ref op) => {Expr::CmpSle(self::Cmp {left: Box::new(build_expression(&op.left())), right: Box::new(build_expression(&op.right()))})}
+        CmpSge (ref op) => {Expr::CmpSge(self::Cmp {left: Box::new(build_expression(&op.left())), right: Box::new(build_expression(&op.right()))})}
+        CmpSgt (ref op) => {Expr::CmpSgt(self::Cmp {left: Box::new(build_expression(&op.left())), right: Box::new(build_expression(&op.right()))})}
 
         Add (ref op) => {Expr::Add(self::Arithmetic {left: Box::new(build_expression(&op.left())), right: Box::new(build_expression(&op.right()))})}
         Sub (ref op) => {Expr::Sub(self::Arithmetic {left: Box::new(build_expression(&op.left())), right: Box::new(build_expression(&op.right()))})}
@@ -85,14 +127,25 @@ pub fn eval_expression<'a>(expr: Expr, state: &State<'a>) -> u64 {
     match expr {
         Expr::Value(v) => v,
         Expr::Reg(r) => state.regs.get(r.name),
-        Expr::Sub(s) => eval_expression(*s.left, state) - eval_expression(*s.right, state),
-        Expr::Add(s) => {
-            let temp1 = eval_expression(*s.left, state);
-            let temp2 = eval_expression(*s.right, state);
-            info!(" > Should add 0x{:x} and 0x{:x}", temp1, temp2);
-            return 50;
-        },
+        Expr::Load(l) => eval_expression(*l.source_mem, state),
 
-        _ => {error!("Unknown expr"); 1}
+        Expr::CmpE(s) => if eval_expression(*s.left, state) == eval_expression(*s.right, state) {1} else {0},
+        Expr::CmpSlt(s) => if eval_expression(*s.left, state) < eval_expression(*s.right, state) {1} else {0},
+        Expr::CmpSle(s) => if eval_expression(*s.left, state) <= eval_expression(*s.right, state) {1} else {0},
+        Expr::CmpSge(s) => if eval_expression(*s.left, state) >= eval_expression(*s.right, state) {1} else {0},
+        Expr::CmpSgt(s) => if eval_expression(*s.left, state) > eval_expression(*s.right, state) {1} else {0},
+
+        Expr::Add(s) => eval_expression(*s.left, state).overflowing_add(eval_expression(*s.right, state)).0,
+        Expr::Sub(s) => eval_expression(*s.left, state).overflowing_sub(eval_expression(*s.right, state)).0,
+        Expr::And(s) => eval_expression(*s.left, state) & eval_expression(*s.right, state),
+        Expr::Or(s) => eval_expression(*s.left, state) | eval_expression(*s.right, state),
+        Expr::Xor(s) => eval_expression(*s.left, state) ^ eval_expression(*s.right, state),
+        Expr::Mul(s) => eval_expression(*s.left, state).overflowing_mul(eval_expression(*s.right, state)).0,
+        Expr::Divu(s) => eval_expression(*s.left, state) / eval_expression(*s.right, state),
+        Expr::Divs(s) => eval_expression(*s.left, state) / eval_expression(*s.right, state),
+        Expr::Modu(s) => eval_expression(*s.left, state) % eval_expression(*s.right, state),
+        Expr::Mods(s) => eval_expression(*s.left, state) % eval_expression(*s.right, state),
+        Expr::Undef(s) => {error!("Undef expr {:?}", s.expr); 1},
+        _ => {error!("Unimplemented expr "); 1}
     }
 }
