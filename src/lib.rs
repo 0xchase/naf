@@ -4,6 +4,7 @@ extern crate binja;
 extern crate riscv_dis;
 extern crate rayon;
 extern crate z3;
+extern crate cpython;
 
 mod ninja;
 mod state;
@@ -12,6 +13,7 @@ mod liftcheck;
 mod procedures;
 mod run;
 mod solver;
+mod debugger;
 
 use binja::binaryview::{BinaryView};
 use binja::command;

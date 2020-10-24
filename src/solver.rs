@@ -1,6 +1,11 @@
 use z3;
 use z3::ast;
 
+enum Var {
+    u64,
+    String,
+}
+
 pub fn test() {
     let cfg = z3::Config::new();
     let ctx = z3::Context::new(&cfg);
@@ -17,4 +22,6 @@ pub fn test() {
 
     let n1 = ast::Int::from_i64(&ctx, 55);
     let n2 = ast::Int::from_i64(&ctx, 55);
+
+
 }

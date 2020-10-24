@@ -1,6 +1,7 @@
 use ninja::*;
 use state::*;
 use solver;
+use debugger;
 
 pub fn run(program: Program) {
     
@@ -13,10 +14,11 @@ pub fn run(program: Program) {
     program.seek(state.addr);
     
     state.print();
-
+    
     // -------------------------------
 
     solver::test();
+    debugger::test();
 
     //program.strings();
     //program.symbols();

@@ -190,7 +190,6 @@ pub fn eval_expression<'a>(expr: Expr, state: &State<'a>) -> u64 {
 
         Expr::MulsDp(s) => eval_expression(*s.left, state).overflowing_mul(eval_expression(*s.right, state)).0,
         Expr::MuluDp(s) => eval_expression(*s.left, state).overflowing_mul(eval_expression(*s.right, state)).0,
-        
 
         Expr::Undef(s) => {error!("Undef expr {:?}", s.expr); 1},
         _ => {error!("Unimplemented expr"); 1}
