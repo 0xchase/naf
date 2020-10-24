@@ -406,7 +406,7 @@ pub fn build_inst(inst: binja::llil::Instruction<binja::architecture::CoreArchit
         SetRegSplit(op) =>
             Inst {
                 addr: op.address(),
-                llil: LlilInst::SetRegSplit(SetRegSplit {addr: 5}),
+                llil: LlilInst::SetRegSplit(SetRegSplit {dest_reg_high: format!("{:?}", op.dest_reg_high()), dest_reg_low: format!("{:?}", op.dest_reg_low()), source_expr: expression::build_expression(&op.source_expr())}),
                 disass: String::from("mov eax, eax"),
             },
         SetFlag(op) =>
@@ -472,7 +472,7 @@ pub fn build_inst(inst: binja::llil::Instruction<binja::architecture::CoreArchit
         Goto(op) =>
             Inst {
                 addr: op.address(),
-                llil: LlilInst::Goto(Goto {target: 5}),
+                llil: LlilInst::Goto(Goto {target: 115}),
                 disass: String::from("mov eax, eax"),
             },
         Syscall(op) =>
@@ -540,7 +540,9 @@ pub struct SetReg {
 }
 
 pub struct SetRegSplit {
-    pub addr: u64,
+    pub dest_reg_high: String,
+    pub dest_reg_low: String,
+    pub source_expr: expression::Expr,
 }
 
 pub struct SetFlag {

@@ -3,6 +3,7 @@ extern crate log;
 extern crate binja;
 extern crate riscv_dis;
 extern crate rayon;
+extern crate z3;
 
 mod ninja;
 mod state;
@@ -10,6 +11,7 @@ mod expression;
 mod liftcheck;
 mod procedures;
 mod run;
+mod solver;
 
 use binja::binaryview::{BinaryView};
 use binja::command;

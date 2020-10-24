@@ -9,6 +9,7 @@ pub struct State<'a> {
     pub memory: Memory,
     pub regs: Regsx64,
     call_stack: Vec<u64>,
+    pub stdin: String,
 }
 
 impl<'a> State<'a> {
@@ -24,8 +25,9 @@ impl<'a> State<'a> {
                     addr: temp,
                     index: 0,
                     memory: Memory::new(),
-                    regs: Regsx64::new(),
+                    regs: Regsx64::new_lockpicksim_main(),
                     call_stack: Vec::new(),
+                    stdin: String::from(""),
                 }
             }
         }
@@ -36,13 +38,8 @@ impl<'a> State<'a> {
             index: 0,
             memory: Memory::new(),
             regs: Regsx64::new(),
-            call_stack: Vec::new()
-        }
-    }
-
-    fn step_ip2(&mut self) {
-        if let Ok(inst2) = self.program.inst_after(self.addr) {
-            self.addr = inst2.addr;
+            call_stack: Vec::new(),
+            stdin: String::from(""),
         }
     }
 
@@ -56,7 +53,15 @@ impl<'a> State<'a> {
                 let val = eval_expression(llil.expr, self);
                 self.regs.set(llil.reg, val);
                 info!("0x{:x} Set register to 0x{:x}", self.addr, val);
-                //self.step_ip()
+            }
+            SetRegSplit(llil) => {
+                let val = eval_expression(llil.source_expr, self);
+                let high: u32 = (val >> 32) as u32;
+                let low: u32 = val as u32;
+
+                self.regs.set(llil.dest_reg_low, low as u64);
+                self.regs.set(llil.dest_reg_high, high as u64);
+                info!("0x{:x} Set registers to 0x{:x} and 0x{:x}", self.addr, low, high);
             }
             Push(llil) => {
                 match llil.expr {
@@ -67,7 +72,6 @@ impl<'a> State<'a> {
                     _ => info!("0x{:x} Pushing other", self.addr),
                 }
                 self.regs.rsp -= 8;
-                //self.step_ip()
             }
             If(llil) => {
                 let result: u64 = eval_expression(llil.condition, self);
@@ -87,8 +91,6 @@ impl<'a> State<'a> {
                 self.memory.store(addr, val);
 
                 info!("0x{:x} Stored 0x{:x} at 0x{:x}", self.addr, val, addr);
-
-                //self.step_ip();
             }
             Call(llil) => {
                 match llil.target {
@@ -117,14 +119,16 @@ impl<'a> State<'a> {
                         } else {
                             error!("Couldn't call function");
                         }
-                        //self.step_ip()
                     },
                     _ => error!("0x{:x} Calling other", self.addr),
                 }
             }
+            Goto(llil) => {
+                info!("0x{:x} Goto instruction at {}", self.addr, llil.target);
+                self.index = llil.target as usize - 1;
+            }
             _ => {
-                error!("0x{:x} Stepping", self.addr);
-                //self.step_ip()
+                error!("0x{:x} Unimplemented instruction", self.addr);
             }
         }
     }
@@ -212,6 +216,7 @@ pub struct Regsx64 {
     rbp: u64,
     rip: u64,
     rflags: u64,
+    rtemp: HashMap<String, u64>,
 }
 
 impl Regsx64 {
@@ -222,7 +227,17 @@ impl Regsx64 {
             r10: 10, r11: 11, r12: 12, 
             r13: 13, r14: 14, r15: 15, 
             rsi: 0, rdi: 0, rsp: 0x7fff00000000, 
-            rbp: 0, rip: 0, rflags: 0
+            rbp: 0x00000000, rip: 0x0, rflags: 0x00000246, rtemp: HashMap::new(),
+        };
+    }
+    fn new_lockpicksim_main() -> Regsx64 {
+        return Regsx64 {
+            rax: 0x004006f6, rbx: 0x004008f0, rcx: 0x004008f0, 
+            rdx: 0x7fffffffe188, r8: 0x00000000, r9: 0x7ffff7fe0d50, 
+            r10: 0xfffffffffffff40c, r11: 0x7ffff7de6fc0, r12: 0x00400600, 
+            r13: 0x7fffffffe170, r14: 0x00000000, r15: 0x00000000, 
+            rsi: 0x7fffffffe178, rdi: 0x00000001, rsp: 0x7fffffffe088, 
+            rbp: 0, rip: 0, rflags: 0, rtemp: HashMap::new(),
         };
     }
     pub fn set(&mut self, name: String, value: u64) {
@@ -262,7 +277,9 @@ impl Regsx64 {
             "esp" => self.rsp = value,
             "ebp" => self.rbp = value,
             "eip" => self.rip = value,
-            _ => error!("Couldn't set register {}", name)
+            _ => {
+                self.rtemp.insert(name, value);
+            },
         }
     }
 
@@ -303,11 +320,13 @@ impl Regsx64 {
             "esp" => self.rsp,
             "ebp" => self.rbp,
             "eip" => self.rip,
-
             "fsbase" => 0,
+
             _ => {
-                error!("Couldn't get register {}", name);
-                return 0;
+                return match self.rtemp.get(&name) {
+                    Some(i) => *i,
+                    _ => 0 as u64,
+                }
             }
         }
     }

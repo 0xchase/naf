@@ -11,13 +11,14 @@ pub fn printf(state: &mut state::State) {
 }
 
 pub fn fgets(state: &mut state::State) {
-    info!("0x{:x} Calling procedures fgets()", state.addr);
+    info!("0x{:x} Calling procedures fgets(), adding string 1234", state.addr);
+    state.stdin = String::from("1234");
     state.regs.rax = 0;
 }
 
 pub fn strlen(state: &mut state::State) {
     info!("0x{:x} Calling procedures strlen()", state.addr);
-    state.regs.rax = 6;
+    state.regs.rax = 4;
 }
 
 pub fn atoi(state: &mut state::State) {
@@ -33,4 +34,3 @@ struct _Procedure {
     pub name: String,
     pub function: u64,
 }
-
