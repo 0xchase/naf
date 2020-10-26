@@ -1,9 +1,9 @@
 use ninja::*;
 use state::*;
 use solver;
-use debugger;
+use debugger::*;
 
-pub fn run(program: Program) {
+pub fn run(program: Program, mut debugger: Debugger) {
     
     let mut state = State::entry(&program);
     
@@ -14,11 +14,14 @@ pub fn run(program: Program) {
     program.seek(state.addr);
     
     state.print();
-    
+
     // -------------------------------
 
     solver::test();
-    debugger::test();
+
+    debugger.init();
+    debugger.breakpoint(0x4006f6);
+    debugger.go();
 
     //program.strings();
     //program.symbols();

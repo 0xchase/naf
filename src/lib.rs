@@ -19,6 +19,8 @@ use binja::binaryview::{BinaryView};
 use binja::command;
 use binja::llil;
 use ninja::*;
+use debugger::*;
+use cpython::{Python, PyDict, PyResult};
 
 #[no_mangle]
 #[allow(non_snake_case)]
@@ -73,8 +75,9 @@ pub extern "C" fn CorePluginInit() -> bool {
 
 pub fn run_plugin(bv: &BinaryView, _addr: u64) {
     //ninja::test(ninja::Program{bv}, addr);
-
-    run::run(Program::new(bv));
+    let gil = Python::acquire_gil();
+    
+    run::run(Program::new(bv), Debugger {py: gil.python()});
 }
 
 /*
