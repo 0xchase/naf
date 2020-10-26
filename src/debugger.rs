@@ -1,39 +1,15 @@
 use cpython::{Python, PyDict, PyResult};
 
-enum DebugState<'p> {
-    Alive(cpython::Python<'p>),
-    Dead(&'p str),
-}
-
 pub struct Debugger<'p> {
     pub py: Python<'p>,
 }
 
 impl<'p> Debugger<'p> {
-    /*
-    pub fn new() -> Debugger<'p> {
-        /*
-        let binaryninja = py.import("binaryninja");
-        let platform = py.import("platform");
-        let bn_debugger = py.import("Vector35_debugger.gdb");
-        
-        let locals = PyDict::new(py);
-        match bn_debugger {
-            Ok(debugger) => {
-                locals.set_item(py, "gdb", debugger);
-                py.run("dbg = gdb.DebugAdapterGdb()", None, Some(&locals));
-            }
-            _ => error!("Unable to import binaryninja debugger"),
-        }
-        */
-
+    pub fn new(py: cpython::Python<'p>) -> Debugger<'p> {
         return Debugger {
-            name: String::from("/home/oem/github/ninja-analysis-framework/binaries/lockpicksim"),
-            gil: Python::acquire_gil(),
-            py: None,
-        };
+            py: py,
+        }
     }
-    */
 
     pub fn init(&mut self) {
         self.py.run("import Vector35_debugger.gdb as gdb", None, None).expect("Couldn't import debugger");
@@ -60,6 +36,25 @@ impl<'p> Debugger<'p> {
     pub fn step_over(&self) {
         self.py.run("dbg.step_over()", None, None).expect("Couldn't step debugger");
         info!("Stepped debugger");
+    }
+
+    pub fn quit(&self) {
+        self.py.run("dbg.quit()", None, None).expect("Couldn't quit debugger");
+        info!("Quit debugger");
+    }
+
+    pub fn ip(&self) -> u64 {
+        match self.py.eval("dbg.reg_read(\"rip\")", None, None) {
+            Ok(i) => return i.extract(self.py).expect("Failed to get rip"),
+            Err(_) => return 0,
+        }
+    }
+
+    pub fn reg_read(&self, reg: &str) -> u64 {
+        match self.py.eval(&format!("dbg.reg_read(\"{}\")", reg), None, None) {
+            Ok(i) => return i.extract(self.py).expect("Failed to get rip"),
+            Err(_) => return 0,
+        }
     }
 
 }
