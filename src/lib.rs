@@ -1,7 +1,7 @@
 #[macro_use]
 extern crate log;
 extern crate binja;
-extern crate riscv_dis;
+//extern crate riscv_dis;
 extern crate rayon;
 extern crate z3;
 extern crate cpython;
@@ -16,6 +16,7 @@ mod solver;
 mod debugger;
 mod project;
 mod python;
+mod debugger_ui;
 
 use binja::binaryview::{BinaryView};
 use binja::command;
