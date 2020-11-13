@@ -8,6 +8,7 @@ pub struct Program<'a> {
 
 impl<'a> Program<'a> {
     pub fn new(bv: &BinaryView) -> Program {
+        bv.functions();
         return Program {
             bv: bv,
         }
@@ -17,6 +18,10 @@ impl<'a> Program<'a> {
         if let Err(_) = self.bv.metadata().navigate_to(self.bv.metadata().current_view(), addr) {
             error!("Failed to seek");
         }
+    }
+
+    pub fn strings(&self) {
+        
     }
 
     pub fn offset(&self) -> u64 {
@@ -44,7 +49,7 @@ impl<'a> Program<'a> {
         //self.bv.string_at_addr() as u64;
     }
 
-    pub fn strings(&self) {
+    pub fn symbols2(&self) {
         for symbol in self.bv.symbols().into_iter() {
             info!("At symbol {} {} {}", symbol.address(), symbol.short_name(), symbol.name());
             match symbol.sym_type() {
@@ -399,7 +404,6 @@ pub fn build_inst(inst: binja::llil::Instruction<binja::architecture::CoreArchit
             Inst {
                 addr: op.address(),
                 llil: LlilInst::SetReg(SetReg {reg: format!("{:?}", op.dest_reg()), expr: expression::build_expression(&op.source_expr())}),
-                //llil: LlilInst::SetReg(SetReg {addr: 5}),
                 disass: String::from("mov eax, eax"),
             }
         },

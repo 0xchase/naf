@@ -6,7 +6,7 @@ extern crate rayon;
 extern crate z3;
 extern crate cpython;
 
-mod ninja;
+mod program;
 mod state;
 mod expression;
 mod liftcheck;
@@ -17,11 +17,12 @@ mod debugger;
 mod project;
 mod python;
 mod debugger_ui;
+mod emulator;
 
 use binja::binaryview::{BinaryView};
 use binja::command;
 use binja::llil;
-use ninja::*;
+use program::*;
 use debugger::*;
 use cpython::{Python};
 use project::*;
@@ -30,11 +31,12 @@ use project::*;
 #[allow(non_snake_case)]
 pub extern "C" fn CorePluginInit() -> bool {
     binja::logger::init(log::LevelFilter::Trace).expect("Failed to set up logging");
-    command::register_for_address("CHASE PLUGIN", "aaa", run_plugin);
+    command::register_for_address("TEST ANALYSIS PLUGIN", "Description goes here", run_plugin1);
+    
     true
 }
 
-pub fn run_plugin(bv: &BinaryView, _addr: u64) {
+pub fn run_plugin1(bv: &BinaryView, _addr: u64) {
     let gil = Python::acquire_gil();
     run::run(Project::new(bv, gil.python()));
 }

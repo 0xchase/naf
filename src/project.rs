@@ -1,7 +1,7 @@
 use cpython::{Python};
 use binja::binaryview::{BinaryView};
 
-use ninja::*;
+use program::*;
 use python::*;
 use debugger::*;
 use debugger_ui::*;

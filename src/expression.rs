@@ -152,7 +152,7 @@ pub fn build_expression(expr: &Expression<CoreArchitecture, Finalized, NonSSA<Re
     }
 }
 
-pub fn eval_expression<'a>(expr: Expr, state: &State<'a>) -> u64 {
+pub fn eval_expression<'a>(expr: Expr, state: &State) -> u64 {
     match expr {
         Expr::Value(v) => v,
         Expr::Reg(r) => state.regs.get(r.name),
