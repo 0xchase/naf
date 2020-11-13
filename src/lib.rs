@@ -9,7 +9,6 @@ extern crate cpython;
 mod program;
 mod state;
 mod expression;
-mod liftcheck;
 mod procedures;
 mod run;
 mod solver;

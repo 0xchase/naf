@@ -16,6 +16,38 @@ impl<'a> Emulator<'a> {
         }
     }
 
+    pub fn entry(program: &'a Program) -> Emulator<'a> {
+        for function in program.functions() {
+            if function.name.eq("_start") {
+
+                let temp = function.llil_start();
+
+                return Emulator {
+                    program: program,
+                    state: State {
+                        addr: temp,
+                        index: 0,
+                        memory: Memory::new(),
+                        regs: Regsx64::new(),
+                        call_stack: Vec::new(),
+                        stdin: String::from(""),
+                    },
+                }
+            }
+        }
+        return Emulator {
+            program: program,
+            state: State {
+                addr: 0,
+                index: 0,
+                memory: Memory::new(),
+                regs: Regsx64::new(),
+                call_stack: Vec::new(),
+                stdin: String::from(""),
+            },
+        }
+    }
+
     pub fn main(program: &'a Program) -> Emulator<'a> {
         for function in program.functions() {
             if function.name.eq("main") {
