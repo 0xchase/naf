@@ -22,5 +22,4 @@ pub fn run(proj: Project) {
     }
     
     emulator.state.print();
-    
 }

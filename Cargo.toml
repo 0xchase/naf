@@ -12,6 +12,10 @@ rayon = "1.0"
 z3 = "0.5.0"
 cpython = "0.5"
 
+[build-dependencies]
+bindgen = "0.53.1"
+cc = "1.0"
+
 [lib]
 crate-type = ["cdylib"]
 

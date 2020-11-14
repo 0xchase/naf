@@ -1,7 +1,6 @@
 #[macro_use]
 extern crate log;
 extern crate binja;
-//extern crate riscv_dis;
 extern crate rayon;
 extern crate z3;
 extern crate cpython;
@@ -26,16 +25,32 @@ use debugger::*;
 use cpython::{Python};
 use project::*;
 
+include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
+
+// External cpp functions
+extern {
+    fn call_cpp();
+}
+
 #[no_mangle]
 #[allow(non_snake_case)]
 pub extern "C" fn CorePluginInit() -> bool {
     binja::logger::init(log::LevelFilter::Trace).expect("Failed to set up logging");
-    command::register_for_address("TEST ANALYSIS PLUGIN", "Description goes here", run_plugin1);
-    
+    command::register_for_address("TEST ANALYSIS PLUGIN", "Description goes here", run_plugin);
+
+    unsafe {
+        call_cpp();
+    }
+
     true
 }
 
-pub fn run_plugin1(bv: &BinaryView, _addr: u64) {
+#[no_mangle]
+extern "C" fn call_rust() {
+    println!("Called rust from cpp");
+}
+
+pub fn run_plugin(bv: &BinaryView, _addr: u64) {
     let gil = Python::acquire_gil();
     run::run(Project::new(bv, gil.python()));
 }
