@@ -4,7 +4,8 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/home/oem/software/binaryninja-api/"
+                "/home/oem/software/binaryninja-api/",
+                "/usr/include/x86_64-linux-gnu/qt5/**",
             ],
             "defines": [],
             "compilerPath": "/usr/bin/clang",

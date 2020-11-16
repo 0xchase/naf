@@ -1,9 +1,15 @@
 #include "../binja-rs/binaryninjacore-sys/binaryninja-api/binaryninjaapi.h"
 #include "../binja-rs/binaryninjacore-sys/binaryninja-api/binaryninjacore.h"
+#include "../binja-rs/binaryninjacore-sys/binaryninja-api/ui/filecontext.h"
+#include "../binja-rs/binaryninjacore-sys/binaryninja-api/ui/viewframe.h"
+
+#include <qt5/QtWidgets/QMessageBox>
+
 #include "ui.h"
 
-void ui_init(BinaryNinja::BinaryView *view, uint64_t start, uint64_t length) {
-	printf("CALLING RUST!!!");
+void ui_init() {
+	//BinaryNinja::LogInfo("Initializing C++ plugin");
+	puts("Initializing C++ plugin");
 }
 
 extern "C"
@@ -12,6 +18,7 @@ extern "C"
 	
 	void call_cpp() {
 		puts("Called cpp from rust");
+		ui_init();
 		call_rust();
 	}
 

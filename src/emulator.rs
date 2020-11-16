@@ -35,6 +35,7 @@ impl<'a> Emulator<'a> {
                 }
             }
         }
+
         return Emulator {
             program: program,
             state: State {
@@ -134,7 +135,7 @@ impl<'a> Emulator<'a> {
             Call(llil) => {
                 match llil.target {
                     Value(v) => {
-                        info!("Calling procedure (unimplemented)");
+                        self.call(v as u64);
                     },
                     _ => error!("0x{:x} Calling other", self.state.addr),
                 }
@@ -149,5 +150,18 @@ impl<'a> Emulator<'a> {
         }
 
         self.state.addr = self.program.inst_after(self.state.addr).expect("Failed to get next instruction").addr;
+    }
+
+    pub fn call(&mut self, target: u64) {
+        for symbol in self.program.symbols() {
+            match symbol {
+                Symbol::ImportedFunction(function) => {
+                    if function.addr == target {
+                        procedures::call(function.name, &self.state);
+                    }
+                },
+                _ => (),
+            }
+        }
     }
 }

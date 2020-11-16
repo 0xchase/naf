@@ -6,6 +6,22 @@ pub struct Program<'a> {
     bv: &'a BinaryView,
 }
 
+pub enum Symbol<'a> {
+    Function(Function<'a>),
+    LibraryFunction(Function<'a>),
+    ImportedFunction(Function<'a>),
+    ImportAddress(u64),
+    Data(u64),
+    ImportedData(u64),
+    External(u64),
+}
+
+pub enum FunctionKind {
+    Function,
+    LibraryFunction,
+    ImportedFunction,
+}
+
 impl<'a> Program<'a> {
     pub fn new(bv: &BinaryView) -> Program {
         bv.functions();
@@ -28,35 +44,64 @@ impl<'a> Program<'a> {
         return self.bv.metadata().current_offset();
     }
 
-    pub fn symbols(&self) {
+    pub fn symbols(&self) -> Vec<Symbol> {
+        let mut vec: Vec<Symbol> = Vec::with_capacity(0);
+
         for symbol in self.bv.symbols().into_iter() {
-            info!("At symbol {} {} {}", symbol.address(), symbol.short_name(), symbol.name());
+
             match symbol.sym_type() {
-                SymType::Function => info!(" > function"),
-                SymType::LibraryFunction => info!(" > libraryfunction"),
-                SymType::ImportAddress => info!(" > import address"),
-                SymType::ImportedFunction => info!(" > imported function"),
-                SymType::Data => info!(" > data"),
-                SymType::ImportedData => info!(" > imported data"),
-                SymType::External => info!(" > external"),
+                SymType::Function => {
+                    vec.push(
+                        Symbol::Function(Function {
+                            bv: self.bv,
+                            name: String::from(symbol.name().to_ascii_lowercase()),
+                            addr: symbol.address(),
+                            kind: FunctionKind::Function,
+                        })
+                    );
+                },
+                SymType::LibraryFunction => {
+                    vec.push(
+                        Symbol::LibraryFunction(Function {
+                            bv: self.bv,
+                            name: String::from(symbol.name().to_ascii_lowercase()),
+                            addr: symbol.address(),
+                            kind: FunctionKind::LibraryFunction,
+                        })
+                    );
+                },
+                SymType::ImportAddress => {
+                    vec.push(Symbol::ImportAddress(symbol.address()));
+                },
+                SymType::ImportedFunction => {
+                    vec.push(
+                        Symbol::ImportedFunction(Function {
+                            bv: self.bv,
+                            name: String::from(symbol.name().to_ascii_lowercase()),
+                            addr: symbol.address(),
+                            kind: FunctionKind::ImportedFunction,
+                        })
+                    )
+                },
+                SymType::Data =>{
+                    vec.push(Symbol::Data(symbol.address()));
+                },
+                SymType::ImportedData => {
+                    vec.push(Symbol::ImportedData(symbol.address()));
+                },
+                SymType::External => {
+                    vec.push(Symbol::External(symbol.address()));
+                },
             }
         }
+
+        return vec;
     }
 
     pub fn string_at_addr(&self, addr: u64) {
         //self.bv.string_at_addr(addr);
         //self.bv.offset_
         //self.bv.string_at_addr() as u64;
-    }
-
-    pub fn symbols2(&self) {
-        for symbol in self.bv.symbols().into_iter() {
-            info!("At symbol {} {} {}", symbol.address(), symbol.short_name(), symbol.name());
-            match symbol.sym_type() {
-                SymType::Data => info!("Found data: {}", symbol.name()),
-                _ => (),
-            }
-        }
     }
 
     pub fn functions(&self) -> Vec<Function> {
@@ -67,6 +112,7 @@ impl<'a> Program<'a> {
                     bv: self.bv,
                     name: String::from(function.symbol().name().to_ascii_lowercase()),
                     addr: function.start(),
+                    kind: FunctionKind::Function,
                 }
             )
         }
@@ -80,6 +126,7 @@ impl<'a> Program<'a> {
                 bv: self.bv,
                 name: String::from(function.symbol().name().to_ascii_lowercase()),
                 addr: function.start(),
+                kind: FunctionKind::Function,
             })
         }
         return Err(String::from("Function not found"));
@@ -91,7 +138,8 @@ impl<'a> Program<'a> {
             return Ok(Function {
                 bv: self.bv,
                 name: String::from(function.symbol().name().to_ascii_lowercase()),
-                addr: function.start()
+                addr: function.start(),
+                kind: FunctionKind::Function,
             })
         }
 
@@ -145,8 +193,7 @@ pub struct Function<'a> {
     pub bv: &'a BinaryView,
     pub name: String,
     pub addr: u64,
-    //mlil: Vec<MlilInst>,
-    //hlil: Vec<HlilInst>,
+    pub kind: FunctionKind,
 }
 
 impl<'a> Function<'a> {

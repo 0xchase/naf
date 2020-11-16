@@ -13,7 +13,7 @@ pub fn run(proj: Project) {
     for function in proj.program.functions() {
         info!("{}", function.name);        
     }
-
+    
     // Creates a new emulator at the main function
     let mut emulator = Emulator::main(&proj.program);
     

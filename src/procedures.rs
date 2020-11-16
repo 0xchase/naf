@@ -1,37 +1,40 @@
 use state;
 
-pub fn call(name: String, state: state::State) {
+pub fn call(name: String, state: &state::State) -> u64 {
     // Todo, add code that calls the procedure
+    return match &*name {
+        "puts" => puts(),
+        "printf" => printf(),
+        _ => {
+            error!("Unimplemented procedure: {}", name);
+            0
+        }
+    }
 }
 
 /* These simulate various procedure calls */
 
-fn puts(state: &mut state::State) {
-    info!("0x{:x} Calling procedures puts() (printing string at 0x{:x})", state.addr, state.regs.rdi);
-    state.regs.rax = 0;
+fn puts() -> u64 {
+    info!("Calling procedures puts()");
+    return 0;
 }
 
-fn printf(state: &mut state::State) {
-    info!("0x{:x} Calling procedures printf() (printing string at 0x{:x})", state.addr, state.regs.rdi);
-    state.regs.rax = 0;
+fn printf() -> u64 {
+    info!("Calling procedures printf()");
+    return 0;
 }
 
-fn fgets(state: &mut state::State) {
+fn fgets(state: &mut state::State) -> u64 {
     info!("0x{:x} Calling procedures fgets(), adding string 1234", state.addr);
-    state.stdin = String::from("1234");
-    state.regs.rax = 0;
+    return 0;
 }
 
-fn strlen(state: &mut state::State) {
+fn strlen(state: &mut state::State) -> u64 {
     info!("0x{:x} Calling procedures strlen()", state.addr);
-    state.regs.rax = 4;
+    return 0;
 }
 
-fn atoi(state: &mut state::State) {
+fn atoi(state: &mut state::State) -> u64 {
     info!("0x{:x} Calling procedures atoi()", state.addr);
-    state.regs.rax = 6;
-}
-
-fn unknown(state: &mut state::State) {
-    error!("Calling unknown library");
+    return 0;
 }
