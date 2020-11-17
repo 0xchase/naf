@@ -30,6 +30,7 @@ include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 // External cpp functions
 extern {
     fn call_cpp();
+    fn call_ui();
 }
 
 #[no_mangle]
@@ -37,6 +38,7 @@ extern {
 pub extern "C" fn CorePluginInit() -> bool {
     binja::logger::init(log::LevelFilter::Trace).expect("Failed to set up logging");
     command::register_for_address("TEST ANALYSIS PLUGIN", "Description goes here", run_plugin);
+    command::register_for_address("TEST ANALYSIS PLUGIN MESSAGEBOX", "Description goes here", run_ui);
 
     unsafe {
         call_cpp();
@@ -53,4 +55,10 @@ extern "C" fn call_rust() {
 pub fn run_plugin(bv: &BinaryView, _addr: u64) {
     let gil = Python::acquire_gil();
     run::run(Project::new(bv, gil.python()));
+}
+
+pub fn run_ui(bv: &BinaryView, _addr: u64) {
+    unsafe {
+        call_ui();
+    }
 }

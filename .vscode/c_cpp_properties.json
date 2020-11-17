@@ -6,6 +6,7 @@
                 "${workspaceFolder}/**",
                 "/home/oem/software/binaryninja-api/",
                 "/usr/include/x86_64-linux-gnu/qt5/**",
+                //"/home/oem/software/qt/5.15.0/gcc_64/include/**",
             ],
             "defines": [],
             "compilerPath": "/usr/bin/clang",

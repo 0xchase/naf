@@ -9,7 +9,14 @@ fn main() {
     // println!("cargo:rustc-link-lib=bz2");
 
     // Tell cargo to invalidate the built crate whenever the wrapper changes
-    cc::Build::new().file("./cpp/ui.cpp").include("/usr/include/x86_64-linux-gnu/qt5/").include("/home/oem/github/ninja-analysis-framework/binja-rs/binaryninjacore-sys/binaryninja-api").compile("libinterface.a");
+    cc::Build::new()
+        .cpp(true)
+        .file("./cpp/ui.cpp")
+        .file("./cpp/testui.cpp")
+        .file("./cpp/testtab.cpp")
+        .include("/usr/include/x86_64-linux-gnu/qt5/")
+        .include("/home/oem/github/ninja-analysis-framework/binja-rs/binaryninjacore-sys/binaryninja-api")
+        .compile("libinterface.a");
 
     println!("cargo:rustc-link-lib=static=interface");
 

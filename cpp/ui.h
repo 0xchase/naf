@@ -1,7 +1,8 @@
 #pragma once
-/*
-#include "../binja-rs/binaryninjacore-sys/binaryninja-api/ui/uicontext.h"
 
+//#include <QtWidgets>
+
+/*
 class NotificationListener: UIContextNotification
 {
 	static NotificationListener* m_instance;
