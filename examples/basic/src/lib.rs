@@ -1,8 +1,10 @@
 extern crate naf;
 
 use naf::project::*;
+use naf::emulator::*;
 
-fn run(proj: Project) {
+#[no_mangle]
+fn main(proj: Project) {
     
     println!("Running plugin");
 
@@ -10,6 +12,14 @@ fn run(proj: Project) {
         println!("{}", function.name);
     }
 
+    let mut emulator = Emulator::main(&proj.program);
+
+    for i in 0..10000 {
+        emulator.step();
+        println!("Step {}", i);
+    }
+
     println!("Done running plugin");
     
 }
+

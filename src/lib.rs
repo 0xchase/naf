@@ -66,10 +66,12 @@ pub fn run_script(bv: &BinaryView, _addr: u64) {
     let lib = libloading::Library::new("/home/oem/github/ninja-analysis-framework/examples/basic/target/debug/libbasic.so").expect("Couldn't load library");
     
     unsafe {
-        let func: libloading::Symbol<unsafe extern fn()> = lib.get(b"run").expect("Couldn't find library function");
+        let func: libloading::Symbol<unsafe extern fn(proj: Project)> = lib.get(b"main").expect("Couldn't find library function");
+        func(Project::new(bv, gil.python()));
     }
 
-    run::run(Project::new(bv, gil.python()));
+
+    //run::run(Project::new(bv, gil.python()));
 }
 
 pub fn run_ui(bv: &BinaryView, _addr: u64) {

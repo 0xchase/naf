@@ -170,7 +170,6 @@ pub fn eval_expression<'a>(expr: Expr, state: &State) -> u64 {
         Expr::CmpUge(s) => if eval_expression(*s.left, state) >= eval_expression(*s.right, state) {1} else {0},
         Expr::CmpUgt(s) => if eval_expression(*s.left, state) > eval_expression(*s.right, state) {1} else {0},
 
-
         Expr::Add(s) => eval_expression(*s.left, state).overflowing_add(eval_expression(*s.right, state)).0,
         Expr::Sub(s) => eval_expression(*s.left, state).overflowing_sub(eval_expression(*s.right, state)).0,
         Expr::And(s) => eval_expression(*s.left, state) & eval_expression(*s.right, state),
