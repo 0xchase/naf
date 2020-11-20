@@ -26,11 +26,12 @@ void ui_init() {
 	//UIAction::registerAction("Open selected files");
 	Menu::mainMenu("Tools")->addAction("TEST ANALYSIS PLUGIN WINDOW", "Other");
 	
-	DockHandler *dock_handler = DockHandler::getActiveDockHandler();
+	//DockHandler *dock_handler = DockHandler::getActiveDockHandler();
 
 	//QWidget *mywidget = &MyWidget();
 	//dock_handler->addDockWidget(mywidget);
 
+	/*
 	UIActionHandler::globalActions()->bindAction("TEST ANALYSIS PLUGIN WINDOW", UIAction([](const UIActionContext& context) {
 		UIContext* currentContext = context.context;
 		if (!currentContext)
@@ -48,6 +49,7 @@ void ui_init() {
 
 		puts("Creating UI element");
 	}));
+	*/
 }
 
 void messageBox() {

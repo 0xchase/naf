@@ -1,4 +1,4 @@
 clear
 echo _____________________________________________________________________________________________________________________________________
 echo ""
-cargo build && cp target/debug/libbinja_riscv.so ~/software/binaryninja/plugins/. && echo "" && echo Installed plugin
+cargo build && cp target/debug/libnaf.so ~/software/binaryninja/plugins/. && echo "" && echo Installed plugin

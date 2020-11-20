@@ -1,0 +1,16 @@
+[package]
+name = "basic"
+version = "0.1.0"
+authors = ["0xchase <chasekanipe@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+naf = { path = "/home/oem/github/ninja-analysis-framework/"}
+
+#[build-dependencies]
+#naf = { path = "/home/oem/github/ninja-analysis-framework/"}
+
+[lib]
+crate-type = ["cdylib"]

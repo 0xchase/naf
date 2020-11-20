@@ -1,5 +1,5 @@
 [package]
-name = "binja-riscv"
+name = "naf"
 version = "0.1.0"
 authors = ["Ryan Snyder <ryan.snyder.or@gmail.com>"]
 
@@ -12,13 +12,14 @@ rayon = "1.0"
 z3 = "0.5.0"
 cpython = "0.5"
 binaryninjacore-sys = { path = "binja-rs/binaryninjacore-sys" }
+libloading = "0.6"
 
 [build-dependencies]
 bindgen = "0.53.1"
 cc = "1.0"
 
 [lib]
-crate-type = ["cdylib"]
+crate-type = ["cdylib", "rlib"]
 
 [profile.release]
 panic = "abort"
