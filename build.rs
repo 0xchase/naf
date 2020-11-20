@@ -14,6 +14,7 @@ fn main() {
         .file("./cpp/ui.cpp")
         .file("./cpp/testui.cpp")
         .file("./cpp/testtab.cpp")
+        .file("./cpp/testtabtype.cpp")
         .include("/usr/include/x86_64-linux-gnu/qt5/")
         .include("/home/oem/github/ninja-analysis-framework/binja-rs/binaryninjacore-sys/binaryninja-api")
         .compile("libinterface.a");
@@ -21,8 +22,18 @@ fn main() {
     println!("cargo:rustc-link-lib=static=interface");
 
     println!("cargo:rerun-if-changed=wrapper.h");
-    println!("cargo:rerun-if-changed=./cpp/ui.cpp");
+
     println!("cargo:rerun-if-changed=./cpp/ui.h");
+    println!("cargo:rerun-if-changed=./cpp/ui.cpp");
+
+    println!("cargo:rerun-if-changed=./cpp/testtab.h");
+    println!("cargo:rerun-if-changed=./cpp/testtab.cpp");
+
+    println!("cargo:rerun-if-changed=./cpp/testui.h");
+    println!("cargo:rerun-if-changed=./cpp/testui.cpp");
+
+    println!("cargo:rerun-if-changed=./cpp/testtabtype.h");
+    println!("cargo:rerun-if-changed=./cpp/testtabtype.cpp");
 
     // The bindgen::Builder is the main entry point
     // to bindgen, and lets you build up options for

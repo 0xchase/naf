@@ -10,16 +10,14 @@
 class TestTab: public QScrollArea, public View
 {
 	BinaryViewRef m_data;
-	uint64_t m_currentOffset = 0;
-	//ByteView* m_byteView = nullptr;
-	QPushButton* m_fullAnalysisButton = nullptr;
 
 public:
 	TestTab(QWidget* parent, BinaryViewRef data);
-
+    
 	virtual BinaryViewRef getData() override;
 	virtual uint64_t getCurrentOffset() override;
-	virtual void getSelectionOffsets(uint64_t& begin, uint64_t& end) override;
+	//virtual void getSelectionOffsets(uint64_t& begin, uint64_t& end) override;
+    virtual void setSelectionOffsets(BNAddressRange range) override;
 	virtual QFont getFont() override;
 	virtual bool navigate(uint64_t addr) override;
 
@@ -31,13 +29,4 @@ protected:
 
 private Q_SLOTS:
 	void startFullAnalysis();
-};
-
-
-class TestTabType: public ViewType
-{
-public:
-	TestTabType();
-	virtual int getPriority(BinaryViewRef data, const QString& filename) override;
-	virtual QWidget* create(BinaryViewRef data, ViewFrame* frame) override;
 };

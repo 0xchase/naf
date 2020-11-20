@@ -3,6 +3,7 @@
 #include "../binja-rs/binaryninjacore-sys/binaryninja-api/ui/uitypes.h"
 #include "../binja-rs/binaryninjacore-sys/binaryninja-api/ui/uicontext.h"
 #include "../binja-rs/binaryninjacore-sys/binaryninja-api/ui/filecontext.h"
+#include "../binja-rs/binaryninjacore-sys/binaryninja-api/ui/viewframe.h"
 
 #include <qt5/QtWidgets/QMessageBox>
 #include <qt5/QtWidgets/QGroupBox>
@@ -12,9 +13,12 @@
 #include "ui.h"
 #include "testui.h"
 #include "testtab.h"
+#include "testtabtype.h"
+#include "mywidget.h"
 
 void ui_init() {
 	//BinaryNinja::LogInfo("Initializing C++ plugin");
+
 	puts("Initializing C++ UI plugin");
 
 	//ViewType::registerViewType(new TestTabType());
@@ -22,7 +26,11 @@ void ui_init() {
 	//UIAction::registerAction("Open selected files");
 	Menu::mainMenu("Tools")->addAction("TEST ANALYSIS PLUGIN WINDOW", "Other");
 	
-	
+	DockHandler *dock_handler = DockHandler::getActiveDockHandler();
+
+	//QWidget *mywidget = &MyWidget();
+	//dock_handler->addDockWidget(mywidget);
+
 	UIActionHandler::globalActions()->bindAction("TEST ANALYSIS PLUGIN WINDOW", UIAction([](const UIActionContext& context) {
 		UIContext* currentContext = context.context;
 		if (!currentContext)
@@ -68,14 +76,6 @@ extern "C"
 		MessageBoxWarning("You have been warned");
 	}
 
-	/*
-	BINARYNINJAPLUGIN bool UIPluginInit()
-	{
-			//PluginCommand::RegisterForRange("CHASE PLUGIN", "Fill region with breakpoint instructions.", &write_breakpoint);
+	// BinaryNinja::PluginCommand::RegisterForRange("CHASE PLUGIN", "SOME DESCRIPTION HERE", &call_rust);
 
-			BinaryNinja::PluginCommand::RegisterForRange("CHASE PLUGIN", "SOME DESCRIPTION HERE", &call_rust);
-											
-		return true;
-	}
-	*/
 }

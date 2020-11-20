@@ -17,5 +17,4 @@ class TestUI: public QWidget {
 
 public:
         TestUI(UIContext* context);
-
 };

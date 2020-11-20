@@ -2,6 +2,7 @@
     "files.associations": {
         "qapplication": "cpp",
         "qmessagebox": "cpp",
-        "qvboxlayout": "cpp"
+        "qvboxlayout": "cpp",
+        "qgroupbox": "cpp"
     }
 }
