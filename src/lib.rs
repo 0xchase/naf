@@ -17,6 +17,7 @@ mod project;
 mod python;
 mod debugger_ui;
 mod emulator;
+mod taint_tracker;
 
 use binja::binaryview::{BinaryView};
 use binja::command;
