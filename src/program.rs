@@ -108,6 +108,7 @@ impl<'a> Program<'a> {
         return Err(String::from("Couldn't find block at address"));
     }
 
+    // Gets the next instruction
     pub fn inst_after(&self, addr: u64) -> Result<Inst, String> {
         if let Ok(block) = self.block_at(addr) {
             let mut found: bool = false;
@@ -134,6 +135,14 @@ impl<'a> Program<'a> {
         }
 
         return Err(String::from("Couldn't find instruction"));
+    }
+
+    pub fn index_after(&self, addr: u64) -> Result<Index, String> {
+        
+    }
+    pub fn index_at(&self, addr: u64) -> Result<Index, String> { 
+        
+
     }
 
     pub fn name(&self) -> String {
@@ -585,6 +594,10 @@ pub struct If {
 }
 
 pub struct Goto {
+    pub target: u64,
+}
+
+pub struct Return {
     pub target: u64,
 }
 

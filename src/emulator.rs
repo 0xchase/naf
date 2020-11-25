@@ -15,7 +15,7 @@ impl<'a> Emulator<'a> {
             state: state,
         }
     }
-
+    // Searches for the entry point and starts working with it there.
     pub fn entry(program: &'a Program) -> Emulator<'a> {
         for function in program.functions() {
             if function.name.eq("_start") {
@@ -47,7 +47,7 @@ impl<'a> Emulator<'a> {
             },
         }
     }
-
+    // Searches for the main function and starts working with it there. 
     pub fn main(program: &'a Program) -> Emulator<'a> {
         for function in program.functions() {
             if function.name.eq("main") {
@@ -86,7 +86,8 @@ impl<'a> Emulator<'a> {
         use expression::eval_expression;
 
         let inst: Inst = self.program.inst_at(self.state.addr).expect("No such instruction");
-
+        
+        //This is where we check which instruction it is and set the state to the necessary values.
         match inst.llil {
             SetReg(llil) => {
                 let val = eval_expression(llil.expr, &self.state);
@@ -142,6 +143,14 @@ impl<'a> Emulator<'a> {
             Goto(llil) => {
                 info!("0x{:x} Goto instruction at {}", self.state.addr, llil.target);
                 self.state.index = llil.target as usize - 1;
+            }
+            Jump(llil) => {
+                info!("0x{:x} Jump instructiion at {}", self.state.addr, llil.target);
+                self.state.index = llil.target as usize - 1;
+            }
+            Return(llil) => {
+                info!("0x{:x} Return instruction at {}", self.state.addr, llil.target);
+                self.state.index = llil.target as usize - 1; 
             }
             _ => {
                 error!("0x{:x} Unimplemented instruction", self.state.addr);
