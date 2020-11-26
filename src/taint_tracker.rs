@@ -14,10 +14,11 @@ pub struct TaintTracker<'a> {
 }
 
 impl<'a> TaintTracker<'a> {
-    // Initialize a taint tracker at the entry point
-    pub fn entry(program: &'a Program) -> TaintTracker<'a> {
+
+    // Initialize a taint tracker at a given function
+    pub fn track_fun(program: &'a Program, name: String) -> TaintTracker<'a> {
         for function in program.functions() {
-            if function.name.eq("_start") {
+            if function.name.eq(&name) {
 
                 let temp = function.llil_start();
 
@@ -40,32 +41,14 @@ impl<'a> TaintTracker<'a> {
             }
         }
     }
+    // Initialize a taint tracker at the entry point
+    pub fn entry(program: &'a Program) -> TaintTracker<'a> {
+        return Self::track_fun(program, String::from("_start"));
+    }
 
     // Initialize a taint tracker at the main function
     pub fn main(program: &'a Program) -> TaintTracker<'a> {
-        for function in program.functions() {
-            if function.name.eq("main") {
-
-                let temp = function.llil_start();
-
-                return TaintTracker {
-                    program: program,
-                    state: TaintState {
-                        addr: temp,
-                        index: 1,
-                        regs_tainted: Vec::new(),
-                    },
-                }
-            }
-        }
-        return TaintTracker {
-            program: program,
-            state: TaintState {
-                addr: 0,
-                index: 1,
-                regs_tainted: Vec::new(),
-            }
-        }
+        return Self::track_fun(program, String::from("main"));
     }
 
     // Todo: Add functions so the user can specify taint sources
@@ -79,10 +62,54 @@ impl<'a> TaintTracker<'a> {
         // This match statement should have an entry for each LLIL instruction
         match inst.llil {
             SetReg(llil) => {
+                let reg_clone: String = llil.reg.clone(); // This is hideous pls fix
                 if self.expression_tainted(llil.expr) {
                     // Right hand side expression is tainted, so taint the destination register
+                    if !self.state.regs_tainted.contains(&reg_clone) {
+                        self.state.regs_tainted.push(llil.reg);
+                    }
                 } else {
+                    self.state.regs_tainted.retain(|r| r.ne(&reg_clone));
                     // Right hand side expression not tainted, so don't propogate taint and remove taint from destination if previously tainted
+                }
+            }
+            SetRegSplit(llil) => {
+                let high_reg_clone = llil.dest_reg_high.clone(); //more hideous
+                let low_reg_clone = llil.dest_reg_low.clone();
+                if self.expression_tainted(llil.source_expr) {
+                    // Right hand side expression is tainted, so taint the destination register
+                    if !self.state.regs_tainted.contains(&llil.dest_reg_high) {
+                        self.state.regs_tainted.push(llil.dest_reg_high);
+                    }
+                    if !self.state.regs_tainted.contains(&llil.dest_reg_low) {
+                        self.state.regs_tainted.push(llil.dest_reg_low);
+                    }
+                } else {
+                    self.state.regs_tainted.retain(|r| r.ne(&high_reg_clone) && r.ne(&low_reg_clone) );
+                    // Right hand side expression not tainted, so don't propogate taint and remove taint from destination if previously tainted
+                }
+            }
+            SetFlag(llil) => {
+            }
+            Store(llil) => {
+            }
+            Push(llil) => {
+            }
+            Jump(llil) => {
+            }
+            JumpTo(llil) => {
+            }
+            Call(llil) => {
+                if self.expression_tainted(llil.target) {
+                    // Add target to tainted branches
+                }
+            }
+            Ret(llil) => {
+                // No side effects
+            }
+            If(llil) => {
+                if self.expression_tainted(llil.condition) {
+                    // Add dest branches to tainted branches
                 }
             }
             Goto(llil) => {
@@ -96,6 +123,7 @@ impl<'a> TaintTracker<'a> {
             }
         }
 
+        // TODO Change to be step after, not instruction
         self.state.addr = self.program.inst_after(self.state.addr).expect("Failed to get next instruction").addr;
     }
 
