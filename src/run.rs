@@ -28,9 +28,16 @@ pub fn run(proj: Project) {
 
     for _ in 0..20 {
         tainter.step();
-        info!("Taint tracker is at address 0x{:x}, tainted regs are:", tainter.state.addr);
-        for reg in &tainter.state.regs_tainted {
+        for state in &tainter.states {
+            info!("Taint tracker is at address 0x{:x}", state.addr);
+        }
+    }
+    for state in tainter.states {
+        for reg in &state.regs_tainted {
             info!(" > {}", reg);
+        }
+        for addr in &state.stack_tainted {
+            info!(" > {}", addr);
         }
     }
     
