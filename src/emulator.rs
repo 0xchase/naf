@@ -80,14 +80,14 @@ impl<'a> Emulator<'a> {
         }
     }
 
-    pub fn step(&mut self) {
+    pub fn step(&mut self) -> Result<String, String>{
         use LlilInst::*;
         use expression::Expr::*;
         use expression::eval_expression;
-        let indexes: Vec<Index> = self.program.index_at(self.state.addr).expect("No instructions ad address");
+        let indexes: Vec<Index> = self.program.insts_at_addr(self.state.addr).expect("No instructions ad address");
         for index in indexes {
             let inst = index.inst;
-
+        
 
         
         // let inst: Inst = self.program.inst_at(self.state.addr).expect("No such instruction");
@@ -162,7 +162,12 @@ impl<'a> Emulator<'a> {
                 }
             }
         }
-
-        self.state.addr = self.program.inst_after(self.state.addr).expect("Failed to get next instruction").addr;
+        let nextInst = self.program.inst_after(self.state.addr);
+        self.state.addr = match nextInst {
+            Ok(inst) => inst.addr,
+            Err(error) => return Err(String::from("Failed to get next instruction")),
+        };
+        return Ok(String::from("Successful Step!"));
     }
+
 }

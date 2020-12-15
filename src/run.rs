@@ -19,7 +19,14 @@ pub fn run(proj: Project) {
     let mut emulator = Emulator::main(&proj.program);
     
     for _ in 0..50 {
-        emulator.step();
+        let result = emulator.step();
+        match result {
+            Ok(_) => continue,
+            Err(err) => {
+                error!("Run error: {}", &err);
+                break;
+            },
+        };
     }
     
     emulator.state.print();

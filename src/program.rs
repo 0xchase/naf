@@ -159,7 +159,9 @@ impl<'a> Program<'a> {
     //     }
     //     return Err(String::from("Couldn't find instruction index"));
     // }
-    pub fn index_at(&self, addr: u64) -> Result<Vec<Index>, String> { 
+
+    /** Retrieves the instructions at the address */
+    pub fn insts_at_addr(&self, addr: u64) -> Result<Vec<Index>, String> { 
         let mut curr_index: u64 = 0; 
         let mut instructions = Vec::new();
         if let Ok(block) = self.block_at(addr) {
