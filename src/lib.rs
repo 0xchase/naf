@@ -5,11 +5,21 @@ extern crate rayon;
 extern crate z3;
 extern crate cpython;
 extern crate libloading;
+extern crate r2pipe;
+extern crate serde_json;
+extern crate rsmt2;
+extern crate unicorn;
 
 pub mod project;
 pub mod program;
 pub mod emulator;
 pub mod state;
+pub mod symbolic_executor;
+pub mod radare2;
+pub mod symbolic_state;
+pub mod bitvector;
+
+mod liftcheck;
 
 mod expression;
 mod procedures;
@@ -23,9 +33,7 @@ use binja::binaryview::{BinaryView};
 use binja::command;
 use binja::llil;
 use program::*;
-use debugger::*;
 use cpython::{Python};
-use project::*;
 
 include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 
@@ -57,19 +65,20 @@ extern "C" fn call_rust() {
 
 pub fn run_plugin(bv: &BinaryView, _addr: u64) {
     let gil = Python::acquire_gil();
-    run::run(Project::new(bv, gil.python()));
+    run::run(project::Project::new(&bv, gil.python()));
 }
 
 pub fn run_script(bv: &BinaryView, _addr: u64) {
+    println!("Running script");
+
     let gil = Python::acquire_gil();
 
     let lib = libloading::Library::new("/home/oem/github/ninja-analysis-framework/examples/basic/target/debug/libbasic.so").expect("Couldn't load library");
-    
-    unsafe {
-        let func: libloading::Symbol<unsafe extern fn(proj: Project)> = lib.get(b"main").expect("Couldn't find library function");
-        func(Project::new(bv, gil.python()));
-    }
 
+    unsafe {
+        let func: libloading::Symbol<unsafe extern fn(proj: project::Project)> = lib.get(b"main").expect("Couldn't find library function");
+        func(project::Project::new(&bv, gil.python()));
+    }
 
     //run::run(Project::new(bv, gil.python()));
 }

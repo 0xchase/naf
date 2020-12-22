@@ -3,7 +3,7 @@ use binja::symbol::SymType;
 use expression;
 
 pub struct Program<'a> {
-    bv: &'a BinaryView,
+    pub bv: &'a BinaryView,
 }
 
 pub enum Symbol<'a> {
@@ -24,7 +24,6 @@ pub enum FunctionKind {
 
 impl<'a> Program<'a> {
     pub fn new(bv: &BinaryView) -> Program {
-        bv.functions();
         return Program {
             bv: bv,
         }
@@ -106,6 +105,8 @@ impl<'a> Program<'a> {
 
     pub fn functions(&self) -> Vec<Function> {
         let mut vec: Vec<Function> = Vec::with_capacity(0);
+        let i: usize = 0;
+
         for function in &self.bv.functions() {
             vec.push(
                 Function {
@@ -216,22 +217,11 @@ impl<'a> Function<'a> {
     }
 
     pub fn llil_start(&self) -> u64 {
-        for block in self.blocks() {
-            for inst in block.llil() {
-                return inst.addr;
-            }
-        }
         return 0;
     }
 
     pub fn length(&self) -> u64 {
         let mut count: u64 = 0;
-        for block in self.blocks() {
-            for inst in block.llil() {
-                count += 1;
-            }
-        }
-
         return count;
     }
 

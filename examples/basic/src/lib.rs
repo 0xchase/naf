@@ -1,24 +1,10 @@
-extern crate naf;
+extern crate naf_core;
 
-use naf::project::*;
-use naf::emulator::*;
+use naf_core::TestTrait;
 
 #[no_mangle]
-fn main(proj: Project) {
-    
-    println!("Running plugin");
-
-    for function in proj.program.functions() {
-        println!("{}", function.name);
-    }
-
-    let mut emulator = Emulator::main(&proj.program);
-
-    for i in 0..10000 {
-        emulator.step();
-        println!("Step {}", i);
-    }
-
+fn main(proj: &dyn TestTrait) {
+    proj.step();
     println!("Done running plugin");
     
 }

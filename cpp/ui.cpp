@@ -31,7 +31,7 @@ void ui_init() {
 	//QWidget *mywidget = &MyWidget();
 	//dock_handler->addDockWidget(mywidget);
 
-	/*
+	
 	UIActionHandler::globalActions()->bindAction("TEST ANALYSIS PLUGIN WINDOW", UIAction([](const UIActionContext& context) {
 		UIContext* currentContext = context.context;
 		if (!currentContext)
@@ -49,7 +49,6 @@ void ui_init() {
 
 		puts("Creating UI element");
 	}));
-	*/
 }
 
 void messageBox() {

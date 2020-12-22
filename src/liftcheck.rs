@@ -411,13 +411,17 @@ pub fn _testing(func: &Function) {
     info!("Starting chase plugin");
 
     info!("Running on function at {}", func.start());
-
+    
     if let Ok(llil) = func.lifted_il() {
         for block in &llil.basic_blocks() {
             for inst in &*block {
                 check_instruction(&inst);
             }
         }
+    }
+
+    if let Ok(llil) = func.lifted_il() {
+        let block = llil.basic_blocks().get(2).as_ref();
     }
     
     

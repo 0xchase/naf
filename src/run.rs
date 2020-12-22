@@ -1,26 +1,24 @@
-/* 
+/*
  * Figure out CLI
- * 
- * 
+ *
 */
 
-use state::*;
-use project::*;
+use project::Project;
+use symbolic_executor::*;
+use bitvector::{BV, BVV, BVE, BVS};
 use emulator::*;
 
 pub fn run(proj: Project) {
-
-    for function in proj.program.functions() {
-        info!("{}", function.name);        
-    }
-    
     // Creates a new emulator at the main function
-    let mut emulator = Emulator::main(&proj.program);
-    
+    let mut executor = SymbolicExecutor::entry(&proj.program.bv);
+
     for _ in 0..50 {
-        emulator.step();
+        executor.step();
     }
-    
-    emulator.state.print();
+
+    let mut emulator = Emulator::new(&proj);
+
+    //BV::Concrete(BVV::from_u64(5));
+    //executor.state.print();
+    //solver::test();
 }
- 

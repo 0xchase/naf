@@ -53,7 +53,7 @@ impl Memory {
         self.map.insert(addr, value);
     }
     
-    pub fn load(&mut self, addr: u64) -> u64 {
+    pub fn load(&self, addr: u64) -> u64 {
         return match self.map.get_key_value(&addr) {
             Some((&key, &value)) => return value,
             _ => 0
@@ -93,10 +93,10 @@ impl Regsx64 {
     pub fn new() -> Regsx64 {
         return Regsx64 {
             rax: 0x004006f6, rbx: 0x004008f0, rcx: 0x004008f0, 
-            rdx: 0x7fffffffe188, r8: 0x00000000, r9: 0x7ffff7fe0d50, 
-            r10: 0xfffffffffffff40c, r11: 0x7ffff7de6fc0, r12: 0x00400600, 
+            rdx: 0x7fffffffe138, r8: 0x00000000, r9: 0x7ffff7fe0d50, 
+            r10: 0xfffffffffffff40c, r11: 0x7ffff7de5fc0, r12: 0x00400600, 
             r13: 0x7fffffffe170, r14: 0x00000000, r15: 0x00000000, 
-            rsi: 0x7fffffffe178, rdi: 0x00000001, rsp: 0x7fffffffe088, 
+            rsi: 0x7fffffffe128, rdi: 0x00000001, rsp: 0x7fffffffe088, 
             rbp: 0, rip: 0, rflags: 0, rtemp: HashMap::new(),
         };
     }

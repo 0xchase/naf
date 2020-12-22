@@ -13,7 +13,7 @@ pub enum Expr {
     Add(Arithmetic), Sub(Arithmetic), And(Arithmetic), Or(Arithmetic), Xor(Arithmetic), Mul(Arithmetic), Divu(Arithmetic), Divs(Arithmetic), Modu(Arithmetic), Mods(Arithmetic),
     Lsl(Arithmetic), Lsr(Arithmetic), Asr(Arithmetic), Rol(Arithmetic), Ror(Arithmetic),
     MulsDp(Arithmetic), MuluDp(Arithmetic),
-    DivuDp(DivDp), DivsDp(DivDp), ModuDp(DivDp), ModsDp(DivDp), 
+    DivuDp(DivDp), DivsDp(DivDp), ModuDp(DivDp), ModsDp(DivDp),
 
     CmpE(Cmp),
     CmpSlt(Cmp),
@@ -46,7 +46,7 @@ pub struct Value {
 }
 
 pub struct Cmp {
-    pub left: Box<self::Expr>, 
+    pub left: Box<self::Expr>,
     pub right: Box<self::Expr>
 }
 
@@ -111,7 +111,7 @@ pub fn build_expression(expr: &Expression<CoreArchitecture, Finalized, NonSSA<Re
         CmpSle (ref op) => {Expr::CmpSle(self::Cmp {left: Box::new(build_expression(&op.left())), right: Box::new(build_expression(&op.right()))})}
         CmpSge (ref op) => {Expr::CmpSge(self::Cmp {left: Box::new(build_expression(&op.left())), right: Box::new(build_expression(&op.right()))})}
         CmpSgt (ref op) => {Expr::CmpSgt(self::Cmp {left: Box::new(build_expression(&op.left())), right: Box::new(build_expression(&op.right()))})}
-        
+
         CmpNe (ref op) => {Expr::CmpNe(self::Cmp {left: Box::new(build_expression(&op.left())), right: Box::new(build_expression(&op.right()))})}
         CmpUlt (ref op) => {Expr::CmpUlt(self::Cmp {left: Box::new(build_expression(&op.left())), right: Box::new(build_expression(&op.right()))})}
         CmpUle (ref op) => {Expr::CmpUle(self::Cmp {left: Box::new(build_expression(&op.left())), right: Box::new(build_expression(&op.right()))})}
@@ -143,7 +143,7 @@ pub fn build_expression(expr: &Expression<CoreArchitecture, Finalized, NonSSA<Re
         ModuDp (ref op) => {Expr::ModuDp(self::DivDp {low: Box::new(build_expression(&op.low())), high: Box::new(build_expression(&op.high())), right: Box::new(build_expression(&op.right()))})}
         ModsDp (ref op) => {Expr::ModsDp(self::DivDp {low: Box::new(build_expression(&op.low())), high: Box::new(build_expression(&op.high())), right: Box::new(build_expression(&op.right()))})}
 
-        
+
         Undef(ref op) => {
             Expr::Undef(self::Undef {
                 expr: String::from(format!("{:?}", expr))
@@ -180,7 +180,7 @@ pub fn eval_expression<'a>(expr: Expr, state: &State) -> u64 {
         Expr::Divs(s) => eval_expression(*s.left, state) / eval_expression(*s.right, state),
         Expr::Modu(s) => eval_expression(*s.left, state) % eval_expression(*s.right, state),
         Expr::Mods(s) => eval_expression(*s.left, state) % eval_expression(*s.right, state),
-        
+
         Expr::Lsl(s) => eval_expression(*s.left, state) << eval_expression(*s.right, state),
         Expr::Lsr(s) => eval_expression(*s.left, state) >> eval_expression(*s.right, state),
         Expr::Asr(s) => eval_expression(*s.left, state) << eval_expression(*s.right, state),
