@@ -1,4 +1,4 @@
-# ninja-analysis-framework
+# NAF
 
 Static analysis framework built on binary ninja, written in Rust. 
 
