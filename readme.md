@@ -1,6 +1,6 @@
 # NAF
 
-Static analysis framework built on binary ninja, written in Rust. 
+Static analysis framework built on binary ninja, written in Rust. Will eventually support emulation with unicorn, simulations of various OS components, emulation and symbolic execution over binja LLIL, taint analysis, and more. 
 
 ## Build Instructions
 
