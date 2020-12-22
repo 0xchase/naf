@@ -1,6 +1,6 @@
-# ninja-analysis-framework
+# NAF
 
-Static analysis framework built on binary ninja, written in Rust. 
+Static analysis framework built on binary ninja, written in Rust. Will eventually support emulation with unicorn, simulations of various OS components, emulation and symbolic execution over binja LLIL, taint analysis, and more. 
 
 ## Build Instructions
 
@@ -9,5 +9,3 @@ Static analysis framework built on binary ninja, written in Rust.
 - Make sure to install `z3` and `sudo apt install libz3-dev`
 - Clone the `binja-rs` repo while inside the ninja-analysis-framework folder (except with `--recurse-submodules flag`)
 - run `cargo build`
-
-Note: I added interoperability with cpp. This reqires some other prereqs not listed here.
