@@ -140,7 +140,9 @@ impl<'a> Emulator<'a> {
                 Call(llil) => {
                     match llil.target {
                         Value(v) => {
-                            info!("Calling procedure (unimplemented)");
+                            let state = &mut self.state; 
+                            //TODO: Need to somehow get function name
+                            procedures::call(String::from("puts"), state); 
                         },
                         _ => error!("0x{:x} Calling other", self.state.addr),
                     }

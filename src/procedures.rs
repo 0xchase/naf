@@ -1,7 +1,19 @@
 use state;
 
-pub fn call(name: String, state: state::State) {
-    // Todo, add code that calls the procedure
+pub fn call(name: String, state: &mut state::State) {
+    /**
+     * Parses the name of function and matches it with the appropriate function.
+     **/
+    let mut_state = state; 
+    match name.as_str() {
+        "puts" => puts(mut_state),
+        "printf" => printf(mut_state),
+        "fgets" => fgets(mut_state),
+        "strlen" => strlen(mut_state),
+        "atoi" => atoi(mut_state),
+        _ => unknown(mut_state),
+    }
+    
 }
 
 /* These simulate various procedure calls */

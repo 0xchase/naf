@@ -26,19 +26,19 @@ pub fn run(proj: Project) {
                 error!("Run error: {}", &err);
                 break;
             },
-        };
+        }; 
     }
     
     emulator.state.print();
 
-    let mut tainter = TaintTracker::main(&proj.program);
+    // let mut tainter = TaintTracker::main(&proj.program);
 
-    for _ in 0..20 {
-        tainter.step();
-        info!("Taint tracker is at address 0x{:x}, tainted regs are:", tainter.state.addr);
-        for reg in &tainter.state.regs_tainted {
-            info!(" > {}", reg);
-        }
-    }
+    // for _ in 0..20 {
+    //     tainter.step();
+    //     info!("Taint tracker is at address 0x{:x}, tainted regs are:", tainter.state.addr);
+    //     for reg in &tainter.state.regs_tainted {
+    //         info!(" > {}", reg);
+    //     }
+    // }
     
 }
