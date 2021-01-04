@@ -140,9 +140,10 @@ impl<'a> Emulator<'a> {
                 Call(llil) => {
                     match llil.target {
                         Value(v) => {
-                            let state = &mut self.state; 
+                            // let state = &mut self.state; 
                             //TODO: Need to somehow get function name
-                            procedures::call(String::from("puts"), state); 
+                            info!("0x{:x} Call to function at address {:?}", self.state.addr, v);
+                            // procedures::call("puts".to_string(), state); 
                         },
                         _ => error!("0x{:x} Calling other", self.state.addr),
                     }
@@ -153,11 +154,11 @@ impl<'a> Emulator<'a> {
                 }
                 Jump(llil) => {
                     info!("0x{:x} Jump instructiion at {}", self.state.addr, llil.addr);
-                    self.state.index = llil.addr as usize - 1;
+                    self.state.addr = llil.addr;
                 }
                 Ret(llil) => {
                     info!("0x{:x} Return instruction at {}", self.state.addr, llil.addr);
-                    self.state.index = llil.addr as usize - 1; 
+                    self.state.addr = llil.addr; 
                 }
                 _ => {
                     error!("0x{:x} Unimplemented instruction", self.state.addr);

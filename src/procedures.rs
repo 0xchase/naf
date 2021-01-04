@@ -29,7 +29,7 @@ fn printf(state: &mut state::State) {
 }
 
 fn fgets(state: &mut state::State) {
-    info!("0x{:x} Calling procedures fgets(), adding string 1234", state.addr);
+    info!("0x{:x} Calling procedures fgets(), adding string ...", state.addr);
     state.stdin = String::from("1234");
     state.regs.rax = 0;
 }
