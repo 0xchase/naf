@@ -94,6 +94,7 @@ impl<'a> Emulator<'a> {
         
         // This is where we check which instruction it is and set the state to the necessary values.
             match inst.llil {
+                // set the value of llil thet 
                 SetReg(llil) => {
                     let val = eval_expression(llil.expr, &self.state);
                     self.state.regs.set(llil.reg, val);
@@ -122,11 +123,13 @@ impl<'a> Emulator<'a> {
                     let result: u64 = eval_expression(llil.condition, &self.state);
                     info!("0x{:x} Compare returned 0x{:x}", self.state.addr, result);
                     if result == 0 {
+                        /* This goes to the wrong address */
                         self.state.addr = llil.target_false;
-                        info!(" > Branching false");
+                        info!(" > Branching false - addr = 0x{:x}", llil.target_false);
                     } else {
+                        /* This goes to the wrong address */ 
                         self.state.addr = llil.target_true;
-                        info!(" > Branching true");
+                        info!(" > Branching true - addr = 0x{:x}", llil.target_true);
                     }
                 }
                 Store(llil) => {
@@ -142,7 +145,12 @@ impl<'a> Emulator<'a> {
                         Value(v) => {
                             // let state = &mut self.state; 
                             //TODO: Need to somehow get function name
-                            info!("0x{:x} Call to function at address {:?}", self.state.addr, v);
+                            info!("0x{:x} Call to function at address 0x{:x}", self.state.addr, v);
+                            /* This is valid but need to figure out whether we are calling a library function or not */
+
+                            // self.state.memory.store(self.state.addr, self.state.addr);
+                            // self.state.addr = v;
+                            
                             // procedures::call("puts".to_string(), state); 
                         },
                         _ => error!("0x{:x} Calling other", self.state.addr),
@@ -153,13 +161,31 @@ impl<'a> Emulator<'a> {
                     self.state.index = llil.target as usize - 1;
                 }
                 Jump(llil) => {
-                    info!("0x{:x} Jump instructiion at {}", self.state.addr, llil.addr);
+                    info!("0x{:x} Jump instructiion to {}", self.state.addr, llil.addr);
                     self.state.addr = llil.addr;
                 }
                 Ret(llil) => {
                     info!("0x{:x} Return instruction at {}", self.state.addr, llil.addr);
                     self.state.addr = llil.addr; 
-                }
+                },
+                NoRet() => {
+                    info!("0x{:x} NoRet instruction", self.state.addr);
+                },
+                Syscall() => {
+                    info!("0x{:x} Syscall instruction", self.state.addr);
+                },
+                Nop() => {
+                    info!("0x{:x} Nop instruction", self.state.addr);
+                },
+                Bp() => {
+                    info!("0x{:x} Bp instruction", self.state.addr); 
+                },
+                Trap() => {
+                    info!("0x{:x} Trap instruction", self.state.addr); 
+                },
+                LlilInst::Undef() => {
+                    info!("0x{:x} Undef instruction", self.state.addr);
+                },
                 _ => {
                     error!("0x{:x} Unimplemented instruction", self.state.addr);
                 }
