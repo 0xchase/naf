@@ -149,6 +149,7 @@ impl<'a> Emulator<'a> {
                             /* This is valid but need to figure out whether we are calling a library function or not */
 
                             // self.state.memory.store(self.state.addr, self.state.addr);
+                            // self.state.regs.rsp -= 8;
                             // self.state.addr = v;
                             
                             // procedures::call("puts".to_string(), state); 
