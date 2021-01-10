@@ -27,6 +27,7 @@ pub enum Expr {
     CmpUgt(Cmp),
 
     Undef(Undef),
+    Pop(Pop), 
 }
 
 pub struct Reg {
@@ -58,6 +59,10 @@ pub struct DivDp {
 
 pub struct Undef {
     pub expr: String,
+}
+
+pub struct Pop {
+    pub expr: String
 }
 
 pub struct Arithmetic { pub left: Box<self::Expr>, pub right: Box<self::Expr> }
@@ -146,6 +151,12 @@ pub fn build_expression(expr: &Expression<CoreArchitecture, Finalized, NonSSA<Re
         
         Undef(ref op) => {
             Expr::Undef(self::Undef {
+                expr: String::from(format!("{:?}", expr))
+            })
+        }
+        
+        Pop(ref op) => {
+            Expr::Pop(self::Pop {
                 expr: String::from(format!("{:?}", expr))
             })
         }

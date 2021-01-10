@@ -336,7 +336,7 @@ pub fn build_inst(inst: binja::llil::Instruction<binja::architecture::CoreArchit
         If(op) =>
             Inst {
                 addr: op.address(),
-                llil: LlilInst::If(If {condition: expression::build_expression(&op.condition()), target_true: 0x40082b, target_false: 0x400817}),
+                llil: LlilInst::If(If {condition: expression::build_expression(&op.condition()), target_true: build_inst(op.true_target()).addr, target_false: build_inst(op.false_target()).addr}),
                 disass: String::from("mov eax, eax"),
             },
         Nop(op) => 
