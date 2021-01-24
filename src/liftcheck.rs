@@ -1,10 +1,10 @@
-//use binja::architecture::{Architecture, CoreArchitecture, Register, RegisterInfo, Flag};
-use binja::architecture::{CoreArchitecture, Register, RegisterInfo};
-use binja::binaryview::{BinaryView, BinaryViewExt};
-use binja::function::Function;
-//use binja::command;
-use binja::llil;
-use binja::llil::{Instruction, Expression, ValueExpr, Finalized, NonSSA, LiftedNonSSA};
+//use binaryninja::architecture::{Architecture, CoreArchitecture, Register, RegisterInfo, Flag};
+use binaryninja::architecture::{CoreArchitecture, Register, RegisterInfo};
+use binaryninja::binaryview::{BinaryView, BinaryViewExt};
+use binaryninja::function::Function;
+//use binaryninja::command;
+use binaryninja::llil;
+use binaryninja::llil::{Instruction, Expression, ValueExpr, Finalized, NonSSA, LiftedNonSSA};
 
 fn check_expression(expr: &Expression<CoreArchitecture, Finalized, NonSSA<LiftedNonSSA>, ValueExpr>, required_size: Option<usize>) {
     use llil::ExprInfo::*;

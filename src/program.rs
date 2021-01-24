@@ -1,5 +1,5 @@
-use binja::binaryview::{BinaryView, BinaryViewExt};
-use binja::symbol::SymType;
+use binaryninja::binaryview::{BinaryView, BinaryViewExt};
+use binaryninja::symbol::SymbolType;
 use expression;
 
 pub struct Program<'a> {
@@ -30,15 +30,15 @@ impl<'a> Program<'a> {
 
     pub fn symbols(&self) {
         for symbol in self.bv.symbols().into_iter() {
-            info!("At symbol {} {} {}", symbol.address(), symbol.short_name(), symbol.name());
+            info!("At symbol {} {} {}", symbol.address(), symbol.short_name(), symbol.full_name());
             match symbol.sym_type() {
-                SymType::Function => info!(" > function"),
-                SymType::LibraryFunction => info!(" > libraryfunction"),
-                SymType::ImportAddress => info!(" > import address"),
-                SymType::ImportedFunction => info!(" > imported function"),
-                SymType::Data => info!(" > data"),
-                SymType::ImportedData => info!(" > imported data"),
-                SymType::External => info!(" > external"),
+                SymbolType::Function => info!(" > function"),
+                SymbolType::LibraryFunction => info!(" > libraryfunction"),
+                SymbolType::ImportAddress => info!(" > import address"),
+                SymbolType::ImportedFunction => info!(" > imported function"),
+                SymbolType::Data => info!(" > data"),
+                SymbolType::ImportedData => info!(" > imported data"),
+                SymbolType::External => info!(" > external"),
             }
         }
     }
@@ -51,9 +51,9 @@ impl<'a> Program<'a> {
 
     pub fn symbols2(&self) {
         for symbol in self.bv.symbols().into_iter() {
-            info!("At symbol {} {} {}", symbol.address(), symbol.short_name(), symbol.name());
+            info!("At symbol {} {} {}", symbol.address(), symbol.short_name(), symbol.full_name());
             match symbol.sym_type() {
-                SymType::Data => info!("Found data: {}", symbol.name()),
+                SymbolType::Data => info!("Found data: {}", symbol.full_name()),
                 _ => (),
             }
         }
@@ -65,7 +65,7 @@ impl<'a> Program<'a> {
             vec.push(
                 Function {
                     bv: self.bv,
-                    name: String::from(function.symbol().name().to_ascii_lowercase()),
+                    name: String::from(function.symbol().full_name().to_ascii_lowercase()),
                     addr: function.start(),
                 }
             )
@@ -78,7 +78,7 @@ impl<'a> Program<'a> {
         for function in &functions {
             return Ok(Function {
                 bv: self.bv,
-                name: String::from(function.symbol().name().to_ascii_lowercase()),
+                name: String::from(function.symbol().full_name().to_ascii_lowercase()),
                 addr: function.start(),
             })
         }
@@ -90,7 +90,7 @@ impl<'a> Program<'a> {
             let function = block.function();
             return Ok(Function {
                 bv: self.bv,
-                name: String::from(function.symbol().name().to_ascii_lowercase()),
+                name: String::from(function.symbol().full_name().to_ascii_lowercase()),
                 addr: function.start()
             })
         }
@@ -140,25 +140,6 @@ impl<'a> Program<'a> {
 
         return Err(String::from("Couldn't find instruction"));
     }
-
-    // // Gets the next index after the next block at the next index.
-    // pub fn index_after(&self, addr: u64, index: u64) -> Result<Vec<Index>, String> {
-    //     let mut curr_index: u64 = 0;
-    //     let mut instructions = Vec::new();
-    //     if let Ok(block) = self.block_at(addr) {
-    //         let mut found: bool = false;
-    //         for inst in block.llil() {
-    //             if found {
-    //                 let return_index = Index{
-    //                     inst: inst,
-    //                     index: curr_index,
-    //                 };
-    //                 instructions.push(return_index);
-    //             }
-    //         }
-    //     }
-    //     return Err(String::from("Couldn't find instruction index"));
-    // }
 
     /** Retrieves the instructions at the address */
     pub fn insts_at_addr(&self, addr: u64) -> Result<Vec<Index>, String> { 
@@ -252,7 +233,7 @@ pub struct Block<'a> {
     //disassembly: Vec<String>,
 }
 
-use binja::llil::InstrInfo::*;
+use binaryninja::llil::InstrInfo::*;
 
 impl<'a> Block<'a> {
     pub fn llil(&self) -> Vec<Inst> {
@@ -276,7 +257,7 @@ impl<'a> Block<'a> {
 }
 
 // Rust bindings for diassemblly not working 
-pub fn build_inst(inst: binja::llil::Instruction<binja::architecture::CoreArchitecture, binja::llil::Finalized, binja::llil::NonSSA<binja::llil::RegularNonSSA>>) -> Inst {
+pub fn build_inst(inst: binaryninja::llil::Instruction<binaryninja::architecture::CoreArchitecture, binaryninja::llil::Finalized, binaryninja::llil::NonSSA<binaryninja::llil::RegularNonSSA>>) -> Inst {
     match inst.info() {
         SetReg(op) => {
             Inst {
@@ -484,11 +465,11 @@ pub struct Return {
 
                     for inst in llil_block.iter() {
 
-                        use binja::llil::InstrInfo::*;
+                        use binaryninja::llil::InstrInfo::*;
                         match inst.info() {
                             Call(op) => {
                                 match op.target().info() { 
-                                    binja::llil::ExprInfo::ConstPtr(p) => {
+                                    binaryninja::llil::ExprInfo::ConstPtr(p) => {
                                         vec.push( 
                                             Inst {
                                                 addr: op.address(),
@@ -498,7 +479,7 @@ pub struct Return {
                                         );
                                         //info!("0x{:x} Calling function at 0x{:x}", op.address(), p.value());
                                     },
-                                    binja::llil::ExprInfo::Load(l) => {
+                                    binaryninja::llil::ExprInfo::Load(l) => {
                                         vec.push( 
                                             Inst {
                                                 addr: op.address(),
@@ -532,10 +513,10 @@ pub struct Return {
                             },
                             Push(op) => {
                                 match op.operand().info() {
-                                    binja::llil::ExprInfo::Reg(r) => {
+                                    binaryninja::llil::ExprInfo::Reg(r) => {
                                         //info!("0x{:x} Push reg {:?}", op.address(), r.source_reg());
                                     },
-                                    binja::llil::ExprInfo::Const(c) => {
+                                    binaryninja::llil::ExprInfo::Const(c) => {
                                         //info!("0x{:x} Push cons 0x{:x}", op.address(), c.value());
                                     },
                                     _ => {
