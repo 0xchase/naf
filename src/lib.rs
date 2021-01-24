@@ -1,6 +1,6 @@
 #[macro_use]
 extern crate log;
-extern crate binja;
+extern crate binaryninja;
 //extern crate riscv_dis;
 extern crate rayon;
 extern crate z3;
@@ -19,9 +19,9 @@ mod debugger_ui;
 mod emulator;
 mod taint_tracker;
 
-use binja::binaryview::{BinaryView};
-use binja::command;
-use binja::llil;
+use binaryninja::binaryview::{BinaryView};
+use binaryninja::command;
+use binaryninja::llil;
 use program::*;
 use debugger::*;
 use cpython::{Python};
@@ -30,7 +30,7 @@ use project::*;
 #[no_mangle]
 #[allow(non_snake_case)]
 pub extern "C" fn CorePluginInit() -> bool {
-    binja::logger::init(log::LevelFilter::Trace).expect("Failed to set up logging");
+    binaryninja::logger::init(log::LevelFilter::Trace).expect("Failed to set up logging");
     command::register_for_address("TEST ANALYSIS PLUGIN", "Description goes here", run_plugin1);
     
     true

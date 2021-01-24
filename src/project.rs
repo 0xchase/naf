@@ -1,5 +1,5 @@
 use cpython::{Python};
-use binja::binaryview::{BinaryView};
+use binaryninja::binaryview::{BinaryView};
 
 use program::*;
 use python::*;

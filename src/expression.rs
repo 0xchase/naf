@@ -1,5 +1,5 @@
-use binja::architecture::{CoreArchitecture, Register, RegisterInfo};
-use binja::llil::{Expression, ValueExpr, Finalized, NonSSA, RegularNonSSA};
+use binaryninja::architecture::{CoreArchitecture, Register, RegisterInfo};
+use binaryninja::llil::{Expression, ValueExpr, Finalized, NonSSA, RegularNonSSA};
 use state::State;
 
 pub enum Expr {
