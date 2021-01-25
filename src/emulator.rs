@@ -143,16 +143,18 @@ impl<'a> Emulator<'a> {
                 Call(llil) => {
                     match llil.target {
                         Value(v) => {
-                            // let state = &mut self.state; 
-                            //TODO: Need to somehow get function name
                             info!("0x{:x} Call to function at address 0x{:x}", self.state.addr, v);
+                            let state = &mut self.state; 
+                            //TODO: Need to somehow get function name
                             /* This is valid but need to figure out whether we are calling a library function or not */
-
+                            let res = self.program.function_at(v);
+                            match res {
+                                Ok(func) => procedures::call(func.name, state),
+                                _ => info!("Couldn't find function value."),
+                            };
                             // self.state.memory.store(self.state.addr, self.state.addr);
                             // self.state.regs.rsp -= 8;
                             // self.state.addr = v;
-                            
-                            // procedures::call("puts".to_string(), state); 
                         },
                         _ => error!("0x{:x} Calling other", self.state.addr),
                     }
