@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use program::*;
 use state::*;
-use procedures;
+use procedures::*;
 
 pub struct Emulator<'a> {
     pub program: &'a Program<'a>,
@@ -87,11 +87,7 @@ impl<'a> Emulator<'a> {
         let indexes: Vec<Index> = self.program.insts_at_addr(self.state.addr).expect("No instructions ad address");
         for index in indexes {
             let inst = index.inst;
-        
-
-        
-        // let inst: Inst = self.program.inst_at(self.state.addr).expect("No such instruction");
-        
+                
         // This is where we check which instruction it is and set the state to the necessary values.
             match inst.llil {
                 // set the value of llil thet 
@@ -100,6 +96,7 @@ impl<'a> Emulator<'a> {
                     self.state.regs.set(llil.reg, val);
                     info!("0x{:x} Set register to 0x{:x}", self.state.addr, val);
                 }
+                // set the value of a register, splitting upper and lower values
                 SetRegSplit(llil) => {
                     let val = eval_expression(llil.source_expr, &self.state);
                     let high: u32 = (val >> 32) as u32;
@@ -149,7 +146,7 @@ impl<'a> Emulator<'a> {
                             /* This is valid but need to figure out whether we are calling a library function or not */
                             let res = self.program.function_at(v);
                             match res {
-                                Ok(func) => procedures::call(func.name, state),
+                                Ok(func) => call(func.name, state),
                                 _ => info!("Couldn't find function value."),
                             };
                             // self.state.memory.store(self.state.addr, self.state.addr);
