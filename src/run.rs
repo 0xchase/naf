@@ -16,20 +16,32 @@ pub fn run(proj: Project) {
     }
 
     // Creates a new emulator at the main function
-    let mut emulator = Emulator::main(&proj.program);
+   let mut mainNotFound = false;
+
+    let mut result = Emulator::main(&proj.program, proj.arch);
     
-    for _ in 0..50 {
-        let result = emulator.step();
-        match result {
-            Ok(_) => continue,
-            Err(err) => {
-                error!("Run error: {}", &err);
-                break;
-            },
-        }; 
+    match (result) {
+        Some(e) => {
+            let mut emulator = e; 
+            for _ in 0..50 {
+                let result = emulator.step();
+                match result {
+                    Ok(_) => continue,
+                    Err(err) => {
+                        error!("Run error: {}", &err);
+                        break;
+                    },
+                }; 
+            }
+            emulator.state.print();
+        }
+        None => {
+            info!("Couldn't find main.");
+            mainNotFound = true;
+        }
     }
+
     
-    emulator.state.print();
 
     // let mut tainter = TaintTracker::main(&proj.program);
 

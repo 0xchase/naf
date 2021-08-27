@@ -1,36 +1,212 @@
 use std::collections::HashMap;
 use program::Program;
+use binaryninja::binaryview::{BinaryView, BinaryViewExt};
+
+pub enum Arch {
+    X86_64 = 0,
+    Arm = 1,
+    Aarch64 = 2
+}
+impl Arch {
+    fn from_u64(value: u64) -> Arch {
+        match value {
+            0 => Arch::X86_64,
+            1 => Arch::Arm,
+            2 => Arch::Aarch64
+        }
+    }
+}
+
+
+pub struct Regsx64 {
+    pub rax: u64,
+    pub rbx: u64,
+    pub rcx: u64,
+    pub rdx: u64,
+    pub r8: u64,
+    pub r9: u64,
+    pub r10: u64,
+    pub r11: u64,
+    pub r12: u64,
+    pub r13: u64,
+    pub r14: u64,
+    pub r15: u64,
+    pub rsi: u64,
+    pub rdi: u64,
+    pub rsp: u64,
+    pub rbp: u64,
+    pub rip: u64,
+    pub rflags: u64,
+    pub rtemp: HashMap<String, u64>,
+}
+
+pub struct RegsAarch64 {
+    pub r0: u64,
+    pub r1: u64,
+    pub r2: u64,
+    pub r3: u64,
+    pub r4: u64,
+    pub r5: u64,
+    pub r6: u64,
+    pub r7: u64,
+    pub r8: u64,
+    pub r9: u64,
+    pub r10: u64,
+    pub r11: u64,
+    pub r12: u64,
+    pub r13: u64,
+    pub r14: u64,
+    pub r15: u64,
+    pub r16: u64,
+    pub r17: u64,
+    pub r18: u64,
+    pub r19: u64,
+    pub r20: u64,
+    pub r21: u64,
+    pub r22: u64,
+    pub r23: u64,
+    pub r24: u64,
+    pub r25: u64,
+    pub r26: u64,
+    pub r27: u64,
+    pub r28: u64,
+    pub r29: u64,
+    pub r30: u64,
+    pub x0: u64,
+    pub x1: u64,
+    pub x2: u64,
+    pub x3: u64,
+    pub x4: u64,
+    pub x5: u64,
+    pub x6: u64,
+    pub x7: u64,
+    pub x8: u64,
+    pub x9: u64,
+    pub x10: u64,
+    pub x11: u64,
+    pub x12: u64,
+    pub x13: u64,
+    pub x14: u64,
+    pub x15: u64,
+    pub x16: u64,
+    pub x17: u64,
+    pub x18: u64,
+    pub x19: u64,
+    pub x20: u64,
+    pub x21: u64,
+    pub x22: u64,
+    pub x23: u64,
+    pub x24: u64,
+    pub x25: u64,
+    pub x26: u64,
+    pub x27: u64,
+    pub x28: u64,
+    pub x29: u64,
+    pub x30: u64,
+    pub w0: u32,
+    pub w1: u32,
+    pub w2: u32,
+    pub w3: u32,
+    pub w4: u32,
+    pub w5: u32,
+    pub w6: u32,
+    pub w7: u32,
+    pub w8: u32,
+    pub w9: u32,
+    pub w10: u32,
+    pub w11: u32,
+    pub w12: u32,
+    pub w13: u32,
+    pub w14: u32,
+    pub w15: u32,
+    pub w16: u32,
+    pub w17: u32,
+    pub w18: u32,
+    pub w19: u32,
+    pub w20: u32,
+    pub w21: u32,
+    pub w22: u32,
+    pub w23: u32,
+    pub w24: u32,
+    pub w25: u32,
+    pub w26: u32,
+    pub w27: u32,
+    pub w28: u32,
+    pub w29: u32,
+    pub w30: u32,
+    pub rflags: u64,
+    pub rtemp: HashMap<String, u64>,   
+}
+pub struct RegsArm {
+    pub r0: u32,
+    pub r1: u32,
+    pub r2: u32,
+    pub r3: u32,
+    pub r4: u32,
+    pub r5: u32,
+    pub r6: u32,
+    pub r7: u32,
+    pub r8: u32,
+    pub r9: u32,
+    pub r10: u32,
+    pub r11: u32,
+    pub r12: u32,
+    pub sp: u32,
+    pub lr: u32,
+    pub pc: u32,
+    pub rflags: u64,
+    pub rtemp: HashMap<String, u64>,
+}
+
+#[derive(Default)]
+pub struct Registers {
+    pub x64: Option<Regsx64>,
+    pub arm: Option<RegsArm>,
+    pub aarch64: Option<RegsAarch64>
+}
 
 pub struct State {
     pub addr: u64,
     pub index: usize,
     pub memory: Memory,
-    pub regs: Regsx64,
+    pub regs: Registers,
     pub call_stack: Vec<u64>,
     pub stdin: String,
+    pub arch: u64
 }
 
 impl State {
-    pub fn new() -> State {
+    pub fn new(arch_string: String) -> State {
+        let arch = Convert_Arch_To_Enum(arch_string);
         return State {
             addr: 0,
             index: 0,
             memory: Memory::new(),
-            regs: Regsx64::new(),
+            regs: Registers::new(arch),
             call_stack: Vec::new(),
             stdin: String::from(""),
+            arch: arch
         }
     }
 
     pub fn print(&self) {
         info!("______________________________________");
-        info!("\trax 0x{:x}\trbx 0x{:x}\trcx 0x{:x}", self.regs.rax, self.regs.rbx, self.regs.rcx);
-        info!("\trdx 0x{:x}\tsi 0x{:x}\trdi 0x{:x}", self.regs.rdx, self.regs.rsi, self.regs.rdi);
-        info!("\tr8 0x{:x}\tr9 0x{:x}\tr10 0x{:x}", self.regs.r8, self.regs.r9, self.regs.r10);
-        info!("\tr11 0x{:x}\tr12 0x{:x}\tr13 0x{:x}", self.regs.r11, self.regs.r12, self.regs.r13);
-        info!("\tr14 0x{:x}\tr15 0x{:x}\trip 0x{:x}", self.regs.r14, self.regs.r15, self.regs.rip);
-        info!("\trbp 0x{:x}\trflags 0x{:x}\trsp 0x{:x}", self.regs.rbp, self.regs.rflags, self.regs.rsp);
-        info!("");
+        let x64_regs = self.regs.x64.unwrap();
+        match Arch::from_u64(self.arch) {
+            Arch::X86_64 => {
+                info!("\trax 0x{:x}\trbx 0x{:x}\trcx 0x{:x}", x64_regs.rax, x64_regs.rbx, x64_regs.rcx);
+                info!("\trdx 0x{:x}\tsi 0x{:x}\trdi 0x{:x}", x64_regs.rdx, x64_regs.rsi, x64_regs.rdi);
+                info!("\tr8 0x{:x}\tr9 0x{:x}\tr10 0x{:x}", x64_regs.r8, x64_regs.r9, x64_regs.r10);
+                info!("\tr11 0x{:x}\tr12 0x{:x}\tr13 0x{:x}", x64_regs.r11, x64_regs.r12, x64_regs.r13);
+                info!("\tr14 0x{:x}\tr15 0x{:x}\trip 0x{:x}", x64_regs.r14, x64_regs.r15, x64_regs.rip);
+                info!("\trbp 0x{:x}\trflags 0x{:x}\trsp 0x{:x}", x64_regs.rbp, x64_regs.rflags, x64_regs.rsp);
+                info!("");
+            },
+            _ => {
+                info!("Nothing to print");
+            }
+        }
+
 
         self.memory.print();
 
@@ -67,30 +243,8 @@ impl Memory {
     }
 }
 
-pub struct Regsx64 {
-    pub rax: u64,
-    pub rbx: u64,
-    pub rcx: u64,
-    pub rdx: u64,
-    pub r8: u64,
-    pub r9: u64,
-    pub r10: u64,
-    pub r11: u64,
-    pub r12: u64,
-    pub r13: u64,
-    pub r14: u64,
-    pub r15: u64,
-    pub rsi: u64,
-    pub rdi: u64,
-    pub rsp: u64,
-    pub rbp: u64,
-    pub rip: u64,
-    pub rflags: u64,
-    pub rtemp: HashMap<String, u64>,
-}
-
-impl Regsx64 {
-    pub fn new() -> Regsx64 {
+impl Default for Regsx64 {
+    fn default() -> Self {
         return Regsx64 {
             rax: 0x004006f6, rbx: 0x004008f0, rcx: 0x004008f0, 
             rdx: 0x7fffffffe188, r8: 0x00000000, r9: 0x7ffff7fe0d50, 
@@ -99,6 +253,83 @@ impl Regsx64 {
             rsi: 0x7fffffffe178, rdi: 0x00000001, rsp: 0x7fffffffe088, 
             rbp: 0, rip: 0, rflags: 0, rtemp: HashMap::new(),
         };
+    }
+}
+
+impl Registers {
+    pub fn new(arch: u64) -> Registers {
+        let mut registers = Registers {
+            x64: None,
+            arm: None,
+            aarch64: None
+        };
+        match Arch::from_u64(arch){
+            Arch::X86_64 => {
+                registers.x64 = Some(Regsx64::new());
+            },
+            _ => {
+                error!("Unknown architecture being implemented");
+            }
+        }
+        return registers;
+    }
+    pub fn set(&mut self, name: String, value: u64, arch: u64) {
+        match Arch::from_u64(arch) {
+            Arch::X86_64 => {
+                self.x64.unwrap().set(name, value);
+            }
+            _ => {
+                error!("Setting registers of unknown architecture!");
+            }
+        }
+    }
+    pub fn get_stack_pointer(&mut self, arch: u64) -> u64 {
+        match Arch::from_u64(arch) {
+            Arch::X86_64 => {
+                let x64 = self.x64.unwrap();
+                return x64.rsp;
+            }
+            _ => {
+                error!("Retrieving stack pointer of unknown register");
+                return 0 as u64;
+            }
+        }
+    }
+    pub fn set_stack_pointer(&mut self, arch: u64) -> u64 {
+        match Arch::from_u64(arch){
+            Arch::X86_64 => {
+                return self.x64.unwrap().rsp;
+            }
+            _ => {
+                error!("Retrieving stack pointer of unknown register");
+                return 0 as u64;
+            }
+        }  
+    }
+    pub fn get(&self, name: String, arch: u64) -> u64 {
+        match Arch::from_u64(arch){
+            Arch::X86_64 => {
+                return self.x64.unwrap().get(name);
+            }
+            _ => {
+                error!("Retrieving stack pointer of unknown register");
+                return 0 as u64;
+            }
+        }
+    }
+}
+
+impl Regsx64 {
+    pub fn new() -> Regsx64 {
+        // return Regsx64 {
+        //     rax: 0x004006f6, rbx: 0x004008f0, rcx: 0x004008f0, 
+        //     rdx: 0x7fffffffe188, r8: 0x00000000, r9: 0x7ffff7fe0d50, 
+        //     r10: 0xfffffffffffff40c, r11: 0x7ffff7de6fc0, r12: 0x00400600, 
+        //     r13: 0x7fffffffe170, r14: 0x00000000, r15: 0x00000000, 
+        //     rsi: 0x7fffffffe178, rdi: 0x00000001, rsp: 0x7fffffffe088, 
+        //     rbp: 0, rip: 0, rflags: 0, rtemp: HashMap::new(),
+        // };
+        return Default::default(); 
     }
 
     pub fn set(&mut self, name: String, value: u64) {
@@ -191,4 +422,12 @@ impl Regsx64 {
             }
         }
     }
+}
+
+pub fn Convert_Arch_To_Enum(arch_string : String) -> u64 {
+    match &*arch_string {
+        "x86_64" => return Arch::X86_64 as u64,
+        _ => return u64::MAX
+    }
+    
 }

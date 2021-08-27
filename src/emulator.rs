@@ -2,82 +2,49 @@ use std::collections::HashMap;
 use program::*;
 use state::*;
 use procedures::*;
+use std::{error::Error};
 
 pub struct Emulator<'a> {
     pub program: &'a Program<'a>,
     pub state: State,
+    pub arch: &'static str
 }
 
 impl<'a> Emulator<'a> {
-    pub fn new(program: &'a Program, state: State) -> Emulator<'a> {
+    pub fn new(program: &'a Program, state: State, arch: &'static str) -> Emulator<'a> {
         return Emulator {
             program: program,
             state: state,
+            arch: arch
         }
     }
     // Searches for the entry point and starts working with it there.
-    pub fn entry(program: &'a Program) -> Emulator<'a> {
+    pub fn entry(program: &'a Program, arch: String) -> Option<Emulator<'a>> {
         for function in program.functions() {
             if function.name.eq("_start") {
 
                 let temp = function.llil_start();
-
-                return Emulator {
-                    program: program,
-                    state: State {
-                        addr: temp,
-                        index: 0,
-                        memory: Memory::new(),
-                        regs: Regsx64::new(),
-                        call_stack: Vec::new(),
-                        stdin: String::from(""),
-                    },
-                }
+    
+                let mut state = State::new(arch);  
+                state.addr = temp;
+                let emulator = Emulator::new(program, state, &*arch); 
+                return Some(emulator);
             }
         }
-        return Emulator {
-            program: program,
-            state: State {
-                addr: 0,
-                index: 0,
-                memory: Memory::new(),
-                regs: Regsx64::new(),
-                call_stack: Vec::new(),
-                stdin: String::from(""),
-            },
-        }
+        return None;
     }
     // Searches for the main function and starts working with it there. 
-    pub fn main(program: &'a Program) -> Emulator<'a> {
+    pub fn main(program: &'a Program, arch: String) -> Option<Emulator<'a>>  {
         for function in program.functions() {
-            if function.name.eq("main") {
-
-                let temp = function.llil_start();
-
-                return Emulator {
-                    program: program,
-                    state: State {
-                        addr: temp,
-                        index: 0,
-                        memory: Memory::new(),
-                        regs: Regsx64::new(),
-                        call_stack: Vec::new(),
-                        stdin: String::from(""),
-                    },
-                }
+            let temp = function.llil_start();
+            if function.name.eq("main") {   
+                let mut state = State::new(arch);  
+                state.addr = temp;
+                let emulator = Emulator::new(program, state, &*arch); 
+                return Some(emulator);
             }
         }
-        return Emulator {
-            program: program,
-            state: State {
-                addr: 0,
-                index: 0,
-                memory: Memory::new(),
-                regs: Regsx64::new(),
-                call_stack: Vec::new(),
-                stdin: String::from(""),
-            },
-        }
+        return None;
     }
 
     pub fn step(&mut self) -> Result<String, String>{
@@ -93,7 +60,7 @@ impl<'a> Emulator<'a> {
                 // set the value of llil thet 
                 SetReg(llil) => {
                     let val = eval_expression(llil.expr, &self.state);
-                    self.state.regs.set(llil.reg, val);
+                    self.state.regs.set(llil.reg, val, self.state.arch);
                     info!("0x{:x} Set register to 0x{:x}", self.state.addr, val);
                 }
                 // set the value of a register, splitting upper and lower values
@@ -102,19 +69,20 @@ impl<'a> Emulator<'a> {
                     let high: u32 = (val >> 32) as u32;
                     let low: u32 = val as u32;
 
-                    self.state.regs.set(llil.dest_reg_low, low as u64);
-                    self.state.regs.set(llil.dest_reg_high, high as u64);
+                    self.state.regs.set(llil.dest_reg_low, low as u64, self.state.arch);
+                    self.state.regs.set(llil.dest_reg_high, high as u64, self.state.arch);
                     info!("0x{:x} Set registers to 0x{:x} and 0x{:x}", self.state.addr, low, high);
                 }
                 Push(llil) => {
+                    let mut stack_pointer = self.state.regs.get_stack_pointer(self.state.arch); 
                     match llil.expr {
                         Reg(r) => {
                             info!("0x{:x} Pushing register {}", self.state.addr, r.name);
-                            self.state.memory.store(self.state.regs.rsp, self.state.regs.get(r.name));
+                            self.state.memory.store(stack_pointer, self.state.regs.get(r.name, self.state.arch));
                         },
                         _ => info!("0x{:x} Pushing other", self.state.addr),
                     }
-                    self.state.regs.rsp -= 8;
+                    stack_pointer -= 8;
                 }
                 If(llil) => {
                     let result: u64 = eval_expression(llil.condition, &self.state);

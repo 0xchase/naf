@@ -166,7 +166,7 @@ pub fn build_expression(expr: &Expression<CoreArchitecture, Finalized, NonSSA<Re
 pub fn eval_expression<'a>(expr: Expr, state: &State) -> u64 {
     match expr {
         Expr::Value(v) => v,
-        Expr::Reg(r) => state.regs.get(r.name),
+        Expr::Reg(r) => state.regs.get(r.name, state.arch),
         Expr::Load(l) => eval_expression(*l.source_mem, state),
 
         Expr::CmpE(s) => if eval_expression(*s.left, state) == eval_expression(*s.right, state) {1} else {0},
